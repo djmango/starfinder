@@ -1,3 +1,4 @@
+# tycho2_reader.py
 import pandas as pd
 from pathlib import Path
 
@@ -45,8 +46,13 @@ class Tycho2Reader:
             "posflg",
             "corr",
         ]
+
         df = pd.read_csv(
-            file_path, sep="|", names=columns, header=None, low_memory=False
+            file_path,
+            sep="|",
+            names=columns,
+            header=None,
+            low_memory=False,
         )
         return df
 
@@ -56,34 +62,29 @@ class Tycho2Reader:
             "TYC1",
             "TYC2",
             "TYC3",
-            "flag",
+            "pflag",
             "RAdeg",
             "DEdeg",
-            "pmRA*",
+            "pmRA",
             "pmDE",
-            "e_RA*",
+            "e_RA",
             "e_DE",
-            "e_pmRA*",
+            "e_pmRA",
             "e_pmDE",
-            "mflag",
+            "epRA",
+            "epDE",
+            "Num",
             "BT",
             "e_BT",
             "VT",
             "e_VT",
             "prox",
-            "TYC",
-            "HIP",
-            "CCDM",
         ]
-        df = pd.read_csv(
-            file_path, sep="|", names=columns, header=None, low_memory=False
-        )
+        df = pd.read_csv(file_path, sep="|", names=columns, header=None)
         return df
 
     def read_index(self):
         file_path = self.data_dir / "index.dat"
         columns = ["rec_t2", "rec_s2", "RAmin", "RAmax", "DEmin", "DEmax"]
-        df = pd.read_csv(
-            file_path, sep=r"\s+", names=columns, header=None, low_memory=False
-        )
+        df = pd.read_csv(file_path, sep=r"\s+", names=columns, header=None)
         return df

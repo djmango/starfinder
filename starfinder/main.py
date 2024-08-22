@@ -1,20 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-# Simplified star catalog (RA in hours, Dec in degrees, magnitude)
-STAR_CATALOG = [
-    (0.14, 29.09, 2.07),  # Alpheratz
-    (2.52, 89.26, 1.97),  # Polaris
-    (5.92, 7.41, 0.50),  # Betelgeuse
-    (6.75, -16.72, -1.46),  # Sirius
-    (14.66, -60.83, 0.01),  # Alpha Centauri
-    (18.62, 38.78, 0.03),  # Vega
-    (22.96, -29.62, 1.17),  # Fomalhaut
-]
+from starfinder.tycho2 import Tycho2Reader
 
 
-def load_star_catalog():
-    return np.array(STAR_CATALOG)
+def load_star_catalog(data_dir):
+    reader = Tycho2Reader(data_dir)
+    catalog = reader.read_catalog()
+    # Select relevant columns and convert to numpy array
+    stars = catalog[["RAdeg", "DEdeg", "VT"]].values
+    assert type(stars) == np.ndarray
+    # Convert RA from degrees to hours
+    stars[:, 0] /= 15
+    print(f"Loaded {len(stars)} stars from Tycho-2 catalog")
+    return stars
 
 
 def ra_dec_to_eci(ra, dec):
@@ -69,9 +67,8 @@ def project_to_image_plane(body_coords, fov, resolution):
 
 
 def calculate_star_visibility(magnitude, iso, shutter_speed):
-    # Simplified visibility calculation
-    brightness = 10 ** (-magnitude / 2.5)  # Convert magnitude to linear scale
-    exposure = iso * shutter_speed / 100  # Simplified exposure calculation
+    brightness = 10 ** (-magnitude / 2.5)
+    exposure = iso * shutter_speed / 100
     return brightness * exposure
 
 
@@ -89,14 +86,15 @@ def generate_star_image(stars, attitude, fov, resolution, iso, shutter_speed):
             visibility = calculate_star_visibility(magnitude, iso, shutter_speed)
             image[y, x] += visibility
 
-    # Normalize and apply a simple brightness curve
     image = np.log1p(image)
     image /= np.max(image)
     return image
 
 
 def main():
-    stars = load_star_catalog()
+    # Specify the path to your Tycho-2 data directory
+    data_dir = "data/tycho2"
+    stars = load_star_catalog(data_dir)
 
     # Example inputs (you can modify these or add user input)
     attitude = np.array([1, 0, 0, 0])  # Identity quaternion (no rotation)
@@ -109,7 +107,9 @@ def main():
 
     plt.figure(figsize=(10, 7.5))
     plt.imshow(image, cmap="gray")
-    plt.title(f"Star Field (FOV: {fov}°, ISO: {iso}, Shutter: {shutter_speed}s)")
+    plt.title(
+        f"Tycho-2 Star Field (FOV: {fov}°, ISO: {iso}, Shutter: {shutter_speed}s)"
+    )
     plt.axis("off")
     plt.show()
 
