@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 # Simplified star catalog (RA in hours, Dec in degrees, magnitude)
 STAR_CATALOG = [
