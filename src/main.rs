@@ -3,7 +3,7 @@ use csv::ReaderBuilder;
 use image::{ImageBuffer, Rgb};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
-use std::io::{self, BufRead};
+use std::io::{self};
 use std::path::PathBuf;
 use std::time::Instant;
 use thiserror::Error;
@@ -164,14 +164,27 @@ fn parse_field(
         .map_err(|_| CatalogError::Parse(format!("Failed to parse {}", field_name)))
 }
 
-/// Parses the magnitude from a record, trying VT first, then BT.
 fn parse_magnitude(record: &csv::StringRecord) -> Result<f64, CatalogError> {
-    if let Ok(vt_mag) = parse_field(record, 20, "VT magnitude") {
-        Ok(vt_mag)
-    } else if let Ok(bt_mag) = parse_field(record, 17, "BT magnitude") {
-        Ok(bt_mag)
-    } else {
-        Err(CatalogError::MissingMagnitude)
+    let bt_mag = parse_field(record, 17, "BT magnitude").ok();
+    let vt_mag = parse_field(record, 19, "VT magnitude").ok();
+
+    // println!("Debug: BT_Mag = {:?}, VT_Mag = {:?}", bt_mag, vt_mag);
+
+    match (bt_mag, vt_mag) {
+        (Some(bt), Some(vt)) => {
+            let v_mag = vt - 0.090 * (bt - vt);
+            // println!("Debug: Calculated V_Mag = {:.3}", v_mag);
+            Ok(v_mag)
+        }
+        (None, Some(vt)) => {
+            // println!("Debug: Using VT_Mag as V_Mag = {:.3}", vt);
+            Ok(vt)
+        }
+        (Some(bt), None) => {
+            // println!("Debug: Using BT_Mag as V_Mag = {:.3}", bt);
+            Ok(bt)
+        }
+        (None, None) => Err(CatalogError::MissingMagnitude),
     }
 }
 
@@ -186,12 +199,26 @@ fn render_stars(
 ) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let mut img = ImageBuffer::new(width, height);
 
+    // Find the minimum and maximum magnitudes in the dataset
+    let min_mag = stars.iter().map(|s| s.mag).fold(f64::INFINITY, f64::min);
+    let max_mag = stars
+        .iter()
+        .map(|s| s.mag)
+        .fold(f64::NEG_INFINITY, f64::max);
+
+    println!("Magnitude range: {:.3} to {:.3}", min_mag, max_mag);
+
     for star in stars {
         let x = ((star.ra_deg - min_ra) / (max_ra - min_ra) * width as f64) as u32;
         let y = ((star.de_deg - min_dec) / (max_dec - min_dec) * height as f64) as u32;
 
         if x < width && y < height {
-            let brightness = ((6.0 - star.mag) / 6.0 * 255.0) as u8;
+            // Inverse the magnitude scale (brighter stars have lower magnitudes)
+            let normalized_mag = (max_mag - star.mag) / (max_mag - min_mag);
+
+            // Apply a non-linear scaling to emphasize brighter stars
+            let brightness = (normalized_mag.powf(2.5) * 255.0) as u8;
+
             let color = Rgb([brightness, brightness, brightness]);
             img.put_pixel(x, y, color);
         }
