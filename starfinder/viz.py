@@ -2,53 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
-import csv
-# from starfinder.tycho2 import Tycho2Reader
-
-
-class Tycho2Reader:
-    def __init__(self, filename):
-        self.filename = filename
-
-    def read_stars(self):
-        stars = []
-        skipped_rows = 0
-        with open(self.filename, "r") as file:
-            reader = csv.reader(file, delimiter="|")
-            for i, row in enumerate(reader):
-                try:
-                    ra = float(row[24].strip())
-                    dec = float(row[25].strip())
-
-                    # Try to get VT magnitude, fallback to BT if VT is empty
-                    vt_mag = row[20].strip()
-                    if vt_mag:
-                        mag = float(vt_mag)
-                    else:
-                        bt_mag = row[17].strip()
-                        if bt_mag:
-                            mag = float(bt_mag)
-                        else:
-                            # Skip this star if both VT and BT are missing
-                            raise ValueError("Both VT and BT magnitudes are missing")
-
-                    stars.append({"RAdeg": ra, "DEdeg": dec, "Mag": mag})
-
-                    # Debug output for every 10000th star
-                    if i % 10000 == 0:
-                        print(f"Star {i}: RA={ra}, Dec={dec}, Mag={mag}")
-
-                except (ValueError, IndexError) as e:
-                    skipped_rows += 1
-                    if skipped_rows <= 10:
-                        print(f"Skipping row {i} due to error: {e}")
-                        print(f"Problematic row: {row}")
-                    elif skipped_rows == 11:
-                        print("Further skipped rows will not be printed...")
-
-        print(f"Total stars read: {len(stars)}")
-        print(f"Total rows skipped: {skipped_rows}")
-        return pd.DataFrame(stars)
+from starfinder.tycho2 import Tycho2Reader
 
 
 def ra_dec_to_eci(ra, dec):
