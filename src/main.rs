@@ -1,14 +1,15 @@
 use clap::Parser;
 use csv::ReaderBuilder;
+use image::{ImageBuffer, Rgb};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
-use std::io::{self};
+use std::io::{self, BufRead};
 use std::path::PathBuf;
 use std::time::Instant;
 use thiserror::Error;
 
 /// Represents a star with its right ascension, declination, and magnitude.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Star {
     ra_deg: f64,
     de_deg: f64,
@@ -46,22 +47,49 @@ struct Args {
     /// Number of stars to display (0 for all)
     #[arg(short, long, default_value_t = 10)]
     display_count: usize,
+
+    /// Minimum Right Ascension (degrees)
+    #[arg(long, default_value_t = 0.0)]
+    min_ra: f64,
+
+    /// Maximum Right Ascension (degrees)
+    #[arg(long, default_value_t = 360.0)]
+    max_ra: f64,
+
+    /// Minimum Declination (degrees)
+    #[arg(long, default_value_t = -90.0)]
+    min_dec: f64,
+
+    /// Maximum Declination (degrees)
+    #[arg(long, default_value_t = 90.0)]
+    max_dec: f64,
+
+    /// Maximum visual magnitude (lower is brighter)
+    #[arg(short, long, default_value_t = 6.0)]
+    max_magnitude: f64,
+
+    /// Output image width in pixels
+    #[arg(long, default_value_t = 800)]
+    width: u32,
+
+    /// Output image height in pixels
+    #[arg(long, default_value_t = 600)]
+    height: u32,
+
+    /// Output image file name
+    #[arg(short, long, default_value = "star_map.png")]
+    output: String,
 }
 
-/// Reads stars from the Tycho-2 catalog file.
-///
-/// # Arguments
-///
-/// * `path` - A path to the catalog file.
-///
-/// # Returns
-///
-/// A vector of `Star` structs representing the successfully read stars.
-///
-/// # Errors
-///
-/// Returns a `CatalogError` if there's an issue reading the file or parsing its contents.
-pub fn read_stars<P: AsRef<std::path::Path>>(path: P) -> Result<Vec<Star>, CatalogError> {
+/// Reads and filters stars from the Tycho-2 catalog file.
+pub fn read_stars<P: AsRef<std::path::Path>>(
+    path: P,
+    min_ra: f64,
+    max_ra: f64,
+    min_dec: f64,
+    max_dec: f64,
+    max_magnitude: f64,
+) -> Result<Vec<Star>, CatalogError> {
     let file = File::open(path)?;
     let reader = io::BufReader::new(file);
     let mut csv_reader = ReaderBuilder::new()
@@ -76,13 +104,20 @@ pub fn read_stars<P: AsRef<std::path::Path>>(path: P) -> Result<Vec<Star>, Catal
         let record = result?;
         match parse_star_record(&record) {
             Ok(star) => {
-                if i % 10000 == 0 {
-                    println!(
-                        "Star {}: RA={}, Dec={}, Mag={}",
-                        i, star.ra_deg, star.de_deg, star.mag
-                    );
+                if star.ra_deg >= min_ra
+                    && star.ra_deg <= max_ra
+                    && star.de_deg >= min_dec
+                    && star.de_deg <= max_dec
+                    && star.mag <= max_magnitude
+                {
+                    if i % 10000 == 0 {
+                        println!(
+                            "Star {}: RA={}, Dec={}, Mag={}",
+                            i, star.ra_deg, star.de_deg, star.mag
+                        );
+                    }
+                    stars.push(star);
                 }
-                stars.push(star);
             }
             Err(e) => {
                 skipped_rows += 1;
@@ -96,7 +131,7 @@ pub fn read_stars<P: AsRef<std::path::Path>>(path: P) -> Result<Vec<Star>, Catal
         }
     }
 
-    println!("Total stars read: {}", stars.len());
+    println!("Total stars read and filtered: {}", stars.len());
     println!("Total rows skipped: {}", skipped_rows);
 
     Ok(stars)
@@ -140,19 +175,53 @@ fn parse_magnitude(record: &csv::StringRecord) -> Result<f64, CatalogError> {
     }
 }
 
-fn main() -> Result<(), CatalogError> {
+fn render_stars(
+    stars: &[Star],
+    width: u32,
+    height: u32,
+    min_ra: f64,
+    max_ra: f64,
+    min_dec: f64,
+    max_dec: f64,
+) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    let mut img = ImageBuffer::new(width, height);
+
+    for star in stars {
+        let x = ((star.ra_deg - min_ra) / (max_ra - min_ra) * width as f64) as u32;
+        let y = ((star.de_deg - min_dec) / (max_dec - min_dec) * height as f64) as u32;
+
+        if x < width && y < height {
+            let brightness = ((6.0 - star.mag) / 6.0 * 255.0) as u8;
+            let color = Rgb([brightness, brightness, brightness]);
+            img.put_pixel(x, y, color);
+        }
+    }
+
+    img
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     println!("Reading stars from: {:?}", args.file);
+    println!("RA range: {} to {}", args.min_ra, args.max_ra);
+    println!("Dec range: {} to {}", args.min_dec, args.max_dec);
+    println!("Max magnitude: {}", args.max_magnitude);
 
     let start = Instant::now();
-    let stars = read_stars(args.file)?;
+    let stars = read_stars(
+        args.file,
+        args.min_ra,
+        args.max_ra,
+        args.min_dec,
+        args.max_dec,
+        args.max_magnitude,
+    )?;
     let read_duration = start.elapsed();
 
-    println!("Time taken to read stars: {:?}", read_duration);
-    println!("Total stars read: {}", stars.len());
+    println!("Time taken to read and filter stars: {:?}", read_duration);
+    println!("Total stars after filtering: {}", stars.len());
 
-    let display_start = Instant::now();
     println!("\nFirst {} stars:", args.display_count);
     for (i, star) in stars.iter().enumerate() {
         if i >= args.display_count && args.display_count != 0 {
@@ -163,9 +232,22 @@ fn main() -> Result<(), CatalogError> {
             i, star.ra_deg, star.de_deg, star.mag
         );
     }
-    let display_duration = display_start.elapsed();
 
-    println!("Time taken to display stars: {:?}", display_duration);
+    let render_start = Instant::now();
+    let img = render_stars(
+        &stars,
+        args.width,
+        args.height,
+        args.min_ra,
+        args.max_ra,
+        args.min_dec,
+        args.max_dec,
+    );
+    img.save(&args.output)?;
+    let render_duration = render_start.elapsed();
+
+    println!("Time taken to render and save image: {:?}", render_duration);
+    println!("Image saved as: {}", args.output);
     println!("Total time elapsed: {:?}", start.elapsed());
 
     Ok(())
