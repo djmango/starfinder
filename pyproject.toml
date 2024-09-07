@@ -2,7 +2,7 @@
 name = "starfinder"
 version = "0.1.0"
 description = ""
-authors = ["Sulaiman Ghori <sulaiman.ghori@outlook.com>"]
+authors = ["Sulaiman Ghori <sulaiman.ghori@outlook.com>", "Layton Miller <layton.r.miller@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

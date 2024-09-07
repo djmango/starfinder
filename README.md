@@ -7,15 +7,15 @@ Download catalog.dat from there, put it in data/tycho2/
 ├── Cargo.toml
 ├── README.md
 ├── data
-│   └── tycho2
-│   ├── catalog.dat
-│   ├── index.dat
-│   ├── suppl_1.dat
-│   └── suppl_2.dat
+│   └── tycho2
+│   ├── catalog.dat
+│   ├── index.dat
+│   ├── suppl_1.dat
+│   └── suppl_2.dat
 ├── poetry.lock
 ├── pyproject.toml
 ├── src
-│   └── main.rs
+│   └── main.rs
 ```
 
 ```
