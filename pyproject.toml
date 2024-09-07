@@ -15,6 +15,7 @@ classifiers = [
 dynamic = ["version"]
 authors = [
   { name="Sulaiman Khan Ghori", email="sulaiman.ghori@outlook.com" },
+  { name="Layton Miller", email="layton.r.miller@gmail.com" },
 ]
 description = "Generate images of the sky w/ accurate stars for star sensor simulation"
 readme = "README.md"
