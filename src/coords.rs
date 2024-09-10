@@ -1,7 +1,13 @@
-use crate::fov::APPROX_GRID_RESOLUTION;
+use crate::fov::GRID_RESOLUTION;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 use std::hash::{Hash, Hasher};
+
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+pub struct StandardCoords {
+    pub x: f64,
+    pub y: f64,
+}
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub struct CartesianCoords {
@@ -12,9 +18,9 @@ pub struct CartesianCoords {
 
 impl CartesianCoords {
     pub fn to_equatorial(&self) -> EquatorialCoords {
-        let mut ra: f64;
+        let ra: f64;
 
-        if (self.y < 0.0) {
+        if self.y < 0.0 {
             ra = (2.0 * PI) - self.x.acos();
         } else {
             ra = self.x.acos();
@@ -37,7 +43,7 @@ pub struct EquatorialCoords {
 impl EquatorialCoords {
     /// Calculate a point's standard coordinates on the plane tangent to the celestial sphere, whose
     /// center point sits tangent to the sphere where the camera's central (z) axis meets it
-    pub fn to_standard(&self, center: &EquatorialCoords) -> StandardCoords {
+    pub fn to_standard(&self, center: EquatorialCoords) -> StandardCoords {
         // Right ascension and declination of current object, in radians
         let ra = self.ra;
         let dec = self.dec;
@@ -63,8 +69,8 @@ impl EquatorialCoords {
 
     pub fn to_grid(&self) -> EquatorialCoords {
         EquatorialCoords {
-            ra: ((self.ra / 2.0 * PI) * (1.0 - (2.0 * self.dec / PI).abs()) * APPROX_GRID_RESOLUTION).round(),
-            dec: ((2.0 * self.dec / PI) * APPROX_GRID_RESOLUTION).round(),
+            ra: ((self.ra / 2.0 * PI) * (1.0 - (2.0 * self.dec / PI).abs()) * GRID_RESOLUTION).round(),
+            dec: ((2.0 * self.dec / PI) * GRID_RESOLUTION).round(),
         }
     }
 }
@@ -85,32 +91,3 @@ impl Hash for EquatorialCoords {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
-pub struct StandardCoords {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl StandardCoords {
-    pub fn to_equatorial(&self, center: &EquatorialCoords) -> EquatorialCoords {
-        // Right ascension and declination of center point of tangent plane, in radians
-        let cra = center.ra;
-        let cdec = center.dec;
-
-        EquatorialCoords {
-            ra: (cra + (self.x / (cdec.cos() - (self.y * cdec.sin()))).atan()),
-            dec: (
-                ((cdec.sin() + (self.y * cdec.cos()))
-                    / ((1.0 + self.x.powi(2) + self.y.powi(2)).sqrt())
-                ).asin()),
-        }
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct BoundsEquatorial {
-    pub max_ra: f64,
-    pub min_ra: f64,
-    pub max_dec: f64,
-    pub min_dec: f64,
-}

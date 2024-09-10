@@ -30,8 +30,7 @@ pub enum CatalogError {
 /// calculations make use of trig functions which deal in radians - this will be our default mode
 pub fn read_stars<P: AsRef<std::path::Path>>(
     path: P,
-    center: &EquatorialCoords,
-    filter_grid: &HashSet<EquatorialCoords>,
+    filter_grid: HashSet<EquatorialCoords>,
     max_magnitude: f64,
 ) -> Result<Vec<Star>, CatalogError> {
     let file = File::open(path)?;

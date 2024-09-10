@@ -1,12 +1,11 @@
-#![allow(warnings)]
-
-use std::path::PathBuf;
+// #![allow(warnings)]
 use clap::Parser;
+use starfield_renderer::coords::{EquatorialCoords};
 use starfield_renderer::fov::{get_fov};
 use starfield_renderer::parsing_utils::{read_stars};
 use starfield_renderer::rendering::{render_stars};
+use std::path::PathBuf;
 use std::time::Instant;
-use starfield_renderer::coords::{EquatorialCoords};
 
 
 /// CLI Arguments
@@ -31,19 +30,19 @@ pub struct Args {
     center_dec: f64,
 
     /// Width of field of view. With 0 roll, corresponds to right ascension (degrees)
-    #[arg(long, default_value_t = 90.0)]
-    fov_w_deg: f64,
+    #[arg(long, default_value_t = 60.0)]
+    fov_w: f64,
 
     /// Height of field of view. With 0 roll, corresponds to declination (degrees)
-    #[arg(long, default_value_t = 60.0)]
-    fov_h_deg: f64,
+    #[arg(long, default_value_t = 45.0)]
+    fov_h: f64,
 
     /// Roll of the camera view (degrees)
     #[arg(long, default_value_t = 0.0)]
-    roll_deg: f64,
+    roll: f64,
 
     /// Maximum visual magnitude (lower is brighter)
-    #[arg(long, default_value_t = 5.0)]
+    #[arg(long, default_value_t = 12.0)]
     max_magnitude: f64,
 
     /// Targeted wavelength - critical for airy disc rendering (nanometers). Default to visible
@@ -69,13 +68,13 @@ pub struct Args {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let start = Instant::now();
+    let run_start = Instant::now();
     let args = Args::parse();
     let center_ra = args.center_ra.to_radians();
     let center_dec = args.center_dec.to_radians();
-    let roll = args.roll_deg.to_radians();
-    let fov_w = args.fov_w_deg.to_radians();
-    let fov_h = args.fov_h_deg.to_radians();
+    let roll = args.roll.to_radians();
+    let fov_w = args.fov_w.to_radians();
+    let fov_h = args.fov_h.to_radians();
 
     /*println!("================ Cmd args list ===============");
     println!("Reading stars from: {:?}", args.source);
@@ -99,38 +98,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("============ End of cmd args list ============");*/
 
     // 1) Rotate FOV by specified roll
-    let center = &EquatorialCoords {
+    let get_fov_start = Instant::now();
+    let center = EquatorialCoords {
         ra: center_ra,
         dec: center_dec,
     };
     let rolled_fov = get_fov(center, fov_w, fov_h, roll);
+    println!("Total FOV retrieval time: {:?}", get_fov_start.elapsed());
 
     // 2) Read stars and filter against rolled_fov to create subset of stars in view of the image
-    let stars = read_stars(args.source, center, &rolled_fov, args.max_magnitude)?;
-    /*let star = &stars[0];
-    println!("Star: {:?}", star.coords);*/
+    let read_stars_start = Instant::now();
+    let stars_in_fov = read_stars(args.source, rolled_fov, args.max_magnitude)?;
+    println!("Total time to read and parse stars: {:?}", read_stars_start.elapsed());
 
-    // 4) Render stars in FOV w/ airy disc
-    let img = render_stars(&stars, args.width, args.height, center, fov_w, fov_h, roll);
+    // 4) Render stars in FOV
+    let render_stars_start = Instant::now();
+    let img = render_stars(stars_in_fov, args.width, args.height, center, fov_w, fov_h, roll);
     img.save(&args.output)?;
+    println!("Total parse and write stars: {:?}", render_stars_start.elapsed());
 
-/*
-    let render_start = Instant::now();
-    let img = render_stars(
-        &stars,
-        args.width,
-        args.height,
-        args.min_ra,
-        args.max_ra,
-        args.min_dec,
-        args.max_dec,
-    );
-    img.save(&args.output)?;
-    let render_duration = render_start.elapsed();
-*/
-    // println!("Time taken to render and save image: {:?}", render_duration);
-    // println!("Image saved as: {}", args.output);
-    println!("Total time elapsed: {:?}", start.elapsed());
+    println!("Total run time elapsed: {:?}", run_start.elapsed());
 
     Ok(())
 }

@@ -2,6 +2,7 @@
 name = "starfield_renderer"
 version = "0.1.0"
 edition = "2021"
+default-run = "main"
 
 [dependencies]
 clap = { version = "4.5.16", features = ["derive"] }
