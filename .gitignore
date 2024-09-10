@@ -248,3 +248,5 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+debug.txt
