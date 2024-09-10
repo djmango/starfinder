@@ -1,3 +1,9 @@
+pub mod rendering;
+pub mod coords;
+pub mod fov;
+pub mod parsing_utils;
+pub mod star;
+
 pub mod render;
 pub mod star_catalog;
 pub mod types;
