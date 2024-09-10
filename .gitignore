@@ -248,3 +248,6 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+debug.txt
+star_map.png

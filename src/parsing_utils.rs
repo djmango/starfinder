@@ -1,18 +1,34 @@
 use csv::ReaderBuilder;
+use std::collections::HashSet;
 use std::fs::File;
-use std::io::{self};
+use std::io;
+use thiserror::Error;
 
-use crate::types::{CatalogError, Star};
+use crate::types::{EquatorialCoords, Star};
+
+/// Errors that can occur during star catalog reading.
+#[derive(Error, Debug)]
+pub enum CatalogError {
+    #[error("IO error: {0}")]
+    Io(#[from] io::Error),
+    #[error("CSV parsing error: {0}")]
+    Csv(#[from] csv::Error),
+    #[error("Missing field: {0}")]
+    MissingField(String),
+    #[error("Parse error: {0}")]
+    Parse(String),
+    #[error("Missing magnitude")]
+    MissingMagnitude,
+}
 
 /// Reads and filters stars from the Tycho-2 catalog file.
 /// https://heasarc.gsfc.nasa.gov/w3browse/all/tycho2.html
 /// http://tdc-www.harvard.edu/catalogs/tycho2.format.html
+/// All values should be in radians. While star coords in the catalog are in degrees, the coordinate
+/// calculations make use of trig functions which deal in radians - this will be our default mode
 pub fn read_stars<P: AsRef<std::path::Path>>(
     path: P,
-    min_ra: f64,
-    max_ra: f64,
-    min_dec: f64,
-    max_dec: f64,
+    filter_grid: HashSet<EquatorialCoords>,
     max_magnitude: f64,
 ) -> Result<Vec<Star>, CatalogError> {
     let file = File::open(path)?;
@@ -29,18 +45,8 @@ pub fn read_stars<P: AsRef<std::path::Path>>(
         let record = result?;
         match parse_star_record(&record) {
             Ok(star) => {
-                if star.ra_deg >= min_ra
-                    && star.ra_deg <= max_ra
-                    && star.de_deg >= min_dec
-                    && star.de_deg <= max_dec
-                    && star.mag <= max_magnitude
-                {
-                    if i % 10000 == 0 {
-                        println!(
-                            "Star {}: RA={}, Dec={}, Mag={}",
-                            i, star.ra_deg, star.de_deg, star.mag
-                        );
-                    }
+                let grid_coords = &star.coords.to_grid();
+                if star.mag < max_magnitude && filter_grid.contains(&grid_coords) {
                     stars.push(star);
                 }
             }
@@ -63,33 +69,22 @@ pub fn read_stars<P: AsRef<std::path::Path>>(
 }
 
 /// Parses a single record from the catalog into a Star struct.
-fn parse_star_record(record: &csv::StringRecord) -> Result<Star, CatalogError> {
+pub fn parse_star_record(record: &csv::StringRecord) -> Result<Star, CatalogError> {
     let ra = parse_field(record, 24, "RA")?;
     let dec = parse_field(record, 25, "Dec")?;
     let mag = parse_magnitude(record)?;
 
     Ok(Star {
-        ra_deg: ra,
-        de_deg: dec,
+        coords: EquatorialCoords {
+            ra: ra.to_radians(),
+            dec: dec.to_radians(),
+        },
         mag,
     })
 }
 
-/// Parses a field from the record, returning a helpful error if parsing fails.
-fn parse_field(
-    record: &csv::StringRecord,
-    index: usize,
-    field_name: &str,
-) -> Result<f64, CatalogError> {
-    record
-        .get(index)
-        .ok_or_else(|| CatalogError::MissingField(field_name.to_string()))?
-        .trim()
-        .parse()
-        .map_err(|_| CatalogError::Parse(format!("Failed to parse {}", field_name)))
-}
-
-fn parse_magnitude(record: &csv::StringRecord) -> Result<f64, CatalogError> {
+/// Get magnitude off a star record
+pub fn parse_magnitude(record: &csv::StringRecord) -> Result<f64, CatalogError> {
     let bt_mag = parse_field(record, 17, "BT magnitude").ok();
     let vt_mag = parse_field(record, 19, "VT magnitude").ok();
 
@@ -111,4 +106,18 @@ fn parse_magnitude(record: &csv::StringRecord) -> Result<f64, CatalogError> {
         }
         (None, None) => Err(CatalogError::MissingMagnitude),
     }
+}
+
+/// Parses a field from the record, returning a helpful error if parsing fails.
+pub fn parse_field(
+    record: &csv::StringRecord,
+    index: usize,
+    field_name: &str,
+) -> Result<f64, CatalogError> {
+    record
+        .get(index)
+        .ok_or_else(|| CatalogError::MissingField(field_name.to_string()))?
+        .trim()
+        .parse()
+        .map_err(|_| CatalogError::Parse(format!("Failed to parse {}", field_name)))
 }

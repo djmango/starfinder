@@ -1,31 +1,37 @@
-pub mod render;
-pub mod star_catalog;
+pub mod fov;
+pub mod parsing_utils;
+pub mod rendering;
 pub mod types;
+
+use crate::parsing_utils::read_stars;
+use crate::rendering::render_stars;
+use crate::types::EquatorialCoords;
 
 use clap::Parser;
 use pyo3::prelude::*;
 use std::time::Instant;
 
-use crate::render::render_stars;
-use crate::star_catalog::read_stars;
-
 #[pyclass]
 #[derive(Parser, Debug, Clone)]
 pub struct StarCatalogArgs {
     #[pyo3(get, set)]
-    pub file: String,
+    pub source: String,
     #[pyo3(get, set)]
-    pub display_count: usize,
+    pub center_ra: f64,
     #[pyo3(get, set)]
-    pub min_ra: f64,
+    pub center_dec: f64,
     #[pyo3(get, set)]
-    pub max_ra: f64,
+    pub fov_w: f64,
     #[pyo3(get, set)]
-    pub min_dec: f64,
+    pub fov_h: f64,
     #[pyo3(get, set)]
-    pub max_dec: f64,
+    pub roll: f64,
     #[pyo3(get, set)]
     pub max_magnitude: f64,
+    #[pyo3(get, set)]
+    pub lambda_nm: f64,
+    #[pyo3(get, set)]
+    pub pixel_size_m: f64,
     #[pyo3(get, set)]
     pub width: u32,
     #[pyo3(get, set)]
@@ -38,25 +44,29 @@ pub struct StarCatalogArgs {
 impl StarCatalogArgs {
     #[new]
     fn new(
-        file: String,
-        display_count: usize,
-        min_ra: f64,
-        max_ra: f64,
-        min_dec: f64,
-        max_dec: f64,
+        source: String,
+        center_ra: f64,
+        center_dec: f64,
+        fov_w: f64,
+        fov_h: f64,
+        roll: f64,
         max_magnitude: f64,
+        lambda_nm: f64,
+        pixel_size_m: f64,
         width: u32,
         height: u32,
         output: String,
     ) -> Self {
         Self {
-            file,
-            display_count,
-            min_ra,
-            max_ra,
-            min_dec,
-            max_dec,
+            source,
+            center_ra,
+            center_dec,
+            fov_w,
+            fov_h,
+            roll,
             max_magnitude,
+            lambda_nm,
+            pixel_size_m,
             width,
             height,
             output,
@@ -64,60 +74,56 @@ impl StarCatalogArgs {
     }
 }
 
-pub fn process_star_catalog(args: StarCatalogArgs) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Reading stars from: {}", args.file);
-    println!("RA range: {} to {}", args.min_ra, args.max_ra);
-    println!("Dec range: {} to {}", args.min_dec, args.max_dec);
-    println!("Max magnitude: {}", args.max_magnitude);
+pub fn process_star_catalog(args: &StarCatalogArgs) -> Result<(), Box<dyn std::error::Error>> {
+    let run_start = Instant::now();
+    let center_ra = args.center_ra.to_radians();
+    let center_dec = args.center_dec.to_radians();
+    let roll = args.roll.to_radians();
+    let fov_w = args.fov_w.to_radians();
+    let fov_h = args.fov_h.to_radians();
 
-    let start = Instant::now();
-    let stars = read_stars(
-        &args.file,
-        args.min_ra,
-        args.max_ra,
-        args.min_dec,
-        args.max_dec,
-        args.max_magnitude,
-    )?;
-    let read_duration = start.elapsed();
+    // 1) Rotate FOV by specified roll
+    let get_fov_start = Instant::now();
+    let center = EquatorialCoords {
+        ra: center_ra,
+        dec: center_dec,
+    };
+    let rolled_fov = fov::get_fov(center, fov_w, fov_h, roll);
+    println!("Total FOV retrieval time: {:?}", get_fov_start.elapsed());
 
-    println!("Time taken to read and filter stars: {:?}", read_duration);
-    println!("Total stars after filtering: {}", stars.len());
+    // 2) Read stars and filter against rolled_fov to create subset of stars in view of the image
+    let read_stars_start = Instant::now();
+    let stars_in_fov = read_stars(&args.source, rolled_fov, args.max_magnitude)?;
+    println!(
+        "Total time to read and parse stars: {:?}",
+        read_stars_start.elapsed()
+    );
 
-    println!("\nFirst {} stars:", args.display_count);
-    for (i, star) in stars.iter().enumerate() {
-        if i >= args.display_count && args.display_count != 0 {
-            break;
-        }
-        println!(
-            "Star {}: RA={:.2}, Dec={:.2}, Mag={:.2}",
-            i, star.ra_deg, star.de_deg, star.mag
-        );
-    }
-
-    let render_start = Instant::now();
+    // 3) Render stars in FOV
+    let render_stars_start = Instant::now();
     let img = render_stars(
-        &stars,
+        stars_in_fov,
         args.width,
         args.height,
-        args.min_ra,
-        args.max_ra,
-        args.min_dec,
-        args.max_dec,
+        center,
+        fov_w,
+        fov_h,
+        roll,
     );
     img.save(&args.output)?;
-    let render_duration = render_start.elapsed();
+    println!(
+        "Total parse and write stars: {:?}",
+        render_stars_start.elapsed()
+    );
 
-    println!("Time taken to render and save image: {:?}", render_duration);
-    println!("Image saved as: {}", args.output);
-    println!("Total time elapsed: {:?}", start.elapsed());
+    println!("Total run time elapsed: {:?}", run_start.elapsed());
 
     Ok(())
 }
 
 #[pyfunction]
 fn process_star_catalog_py(args: StarCatalogArgs) -> PyResult<()> {
-    process_star_catalog(args)
+    process_star_catalog(&args)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))
 }
 
