@@ -1,18 +1,15 @@
-use nalgebra::{SMatrix, SVector, Vector3};
-use serde::{Deserialize, Serialize};
-use crate::coords::{BoundsEquatorial, CartesianCoords, EquatorialCoords, StandardCoords};
+use crate::coords::{CartesianCoords, EquatorialCoords};
+use nalgebra::{SMatrix, Vector3};
 use std::collections::HashSet;
 use std::f64::consts::PI;
 
-pub const APPROX_GRID_RESOLUTION: f64 = 360.0;
+pub const GRID_RESOLUTION: f64 = 360.0;
 
 pub fn get_fov(
-    center: &EquatorialCoords,
+    center: EquatorialCoords,
     fov_w: f64,
     fov_h: f64,
     roll: f64,
-    // Approximation resolution for dividing FOV into smaller regions (NOT image size)
-    // approx_res: i32,
 ) -> HashSet<EquatorialCoords> {
     // Config params for function
     let view_init_center = EquatorialCoords {
@@ -25,7 +22,7 @@ pub fn get_fov(
     let fov_w_half = fov_w / 2.0;
     let fov_h_half = fov_h / 2.0;
 
-    let step_size = 2.0 * PI / APPROX_GRID_RESOLUTION;
+    let step_size = 2.0 * PI / GRID_RESOLUTION;
     let bottom_left = EquatorialCoords {
         ra: view_init_center.ra - fov_w_half,
         dec: view_init_center.dec - fov_h_half,
@@ -42,9 +39,6 @@ pub fn get_fov(
             }.to_cartesian());
         }
     }
-    /*let debug_index = (scatter_shot.len() / 2) as usize;
-    let debug_middle_coord = scatter_shot[debug_index];
-    println!("Approx center grid coord: {:?}", debug_middle_coord);*/
 
     let c_cartesian = center.to_cartesian();
     let y_roll_axis = CartesianCoords {
@@ -106,9 +100,6 @@ pub fn get_fov(
             z: transformed[(2,0)],
         }.to_equatorial().to_grid();
         final_grid.insert(grid_coord);
-        /*if (index == debug_index) {
-            println!("approx center grid coord (after transform) {:?}", grid_coord);
-        }*/
     };
 
     final_grid

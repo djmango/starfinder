@@ -1,10 +1,67 @@
-use std::f64::consts::PI;
-use image::{ImageBuffer, Rgb};
-use nalgebra::SMatrix;
-use spec_math::cephes64::j1;
 use crate::coords::EquatorialCoords;
 use crate::star::Star;
+use image::{ImageBuffer, Rgb};
+use nalgebra::SMatrix;
+// use spec_math::cephes64::j1;
+// use std::f64::consts::PI;
 
+pub fn render_stars(
+    stars: Vec<Star>,
+    width: u32,
+    height: u32,
+    fov_center: EquatorialCoords,
+    fov_w: f64,
+    fov_h: f64,
+    fov_roll: f64,
+) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    let mut img = ImageBuffer::new(width, height);
+
+    // Find the minimum and maximum magnitudes in the dataset
+    let min_mag = stars.iter().map(|s| s.mag).fold(f64::INFINITY, f64::min);
+    let max_mag = stars
+        .iter()
+        .map(|s| s.mag)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let z_roll_mat = SMatrix::<f64, 2, 2>::new(
+        fov_roll.cos(), -fov_roll.sin(),
+        fov_roll.sin(), fov_roll.cos(),
+    );
+    let pixel_ratio_w = width as f64 / fov_w;
+    let pixel_ratio_h = height as f64 / fov_h;
+    let x_offset = width as f64 / 2.0;
+    let y_offset = width as f64 / 2.0;
+
+    println!("Attempting to render {} stars", stars.len());
+    let mut stars_rendered = 0;
+
+    for star in stars {
+        let std_star_coords = star.coords.to_standard(fov_center);
+        let std_star_mat = SMatrix::<f64, 2, 1>::new(std_star_coords.x, std_star_coords.y);
+        let final_star_pos = z_roll_mat * std_star_mat;
+
+        let x = final_star_pos.x * pixel_ratio_w + x_offset;
+        let y = final_star_pos.y * pixel_ratio_h + y_offset;
+
+        if x < 0.0 || x > width as f64 || y < 0.0 || y > height as f64 {
+            continue;
+        }
+
+        // Inverse the magnitude scale (brighter stars have lower magnitudes)
+        let normalized_mag = (max_mag - star.mag) / (max_mag - min_mag);
+        // Apply a non-linear scaling to emphasize brighter stars
+        let brightness = (normalized_mag.powf(2.5) * 255.0) as u8;
+        let color = Rgb([brightness, brightness, brightness]);
+
+        img.put_pixel(x as u32, y as u32, color);
+        stars_rendered = stars_rendered + 1;
+    }
+
+    println!("Actually rendered {} stars", stars_rendered);
+
+    img
+}
+
+/*
 /// Airy disc radius - calculate physical radius, then convert to pixel scale
 pub fn calc_airy_disc_radius(lambda: f64, aperture_diameter: f64, focal_length: f64, pixel_size_m: f64) -> f64 {
     // Physical radius on the sensor in meters
@@ -67,55 +124,4 @@ fn apply_psf(image: &mut [Vec<f64>], star_x: usize, star_y: usize, intensity: f6
             }
         }
     }
-}
-
-pub fn render_stars(
-    stars: &Vec<Star>,
-    width: u32,
-    height: u32,
-    center: &EquatorialCoords,
-    fov_w: f64,
-    fov_h: f64,
-    roll: f64,
-) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let mut img = ImageBuffer::new(width, height);
-
-    // Find the minimum and maximum magnitudes in the dataset
-    let min_mag = stars.iter().map(|s| s.mag).fold(f64::INFINITY, f64::min);
-    let max_mag = stars
-        .iter()
-        .map(|s| s.mag)
-        .fold(f64::NEG_INFINITY, f64::max);
-    let z_roll_mat = SMatrix::<f64, 2, 2>::new(
-        roll.cos(), -roll.sin(),
-        roll.sin(), roll.cos(),
-    );
-    let pixel_ratio_w = width as f64 / fov_w;
-    let pixel_ratio_h = height as f64 / fov_h;
-    let x_offset = width as f64 / 2.0;
-    let y_offset = width as f64 / 2.0;
-
-    for star in stars {
-        let std_star_coords = star.coords.to_standard(center);
-        let std_star_mat = SMatrix::<f64, 2, 1>::new(std_star_coords.x, std_star_coords.y);
-        let final_star_pos = z_roll_mat * std_star_mat;
-
-        let x = final_star_pos.x * pixel_ratio_w + x_offset;
-        let y = final_star_pos.y * pixel_ratio_h + y_offset;
-        println!("(x, y) | ({},{})", x, y);
-        if (x < 0.0 || x > width as f64 || y < 0.0 || y > height as f64) {
-            println!("Discarding star at ({}, {})", x, y);
-            continue;
-        }
-
-        // Inverse the magnitude scale (brighter stars have lower magnitudes)
-        let normalized_mag = (max_mag - star.mag) / (max_mag - min_mag);
-        // Apply a non-linear scaling to emphasize brighter stars
-        let brightness = (normalized_mag.powf(2.5) * 255.0) as u8;
-        let color = Rgb([brightness, brightness, brightness]);
-
-        img.put_pixel(x as u32, y as u32, color);
-    }
-
-    img
-}
+}*/
