@@ -1,19 +1,11 @@
+use clap::Parser;
+use pyo3::prelude::*;
+
 pub mod coords;
 pub mod fov;
 pub mod parsing_utils;
 pub mod rendering;
 pub mod star;
-
-pub mod render;
-pub mod star_catalog;
-pub mod types;
-
-use clap::Parser;
-use pyo3::prelude::*;
-use std::time::Instant;
-
-use crate::render::render_stars;
-use crate::star_catalog::read_stars;
 
 #[pyclass]
 #[derive(Parser, Debug, Clone)]
@@ -68,57 +60,6 @@ impl StarCatalogArgs {
             output,
         }
     }
-}
-
-pub fn process_star_catalog(args: StarCatalogArgs) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Reading stars from: {}", args.file);
-    println!("RA range: {} to {}", args.min_ra, args.max_ra);
-    println!("Dec range: {} to {}", args.min_dec, args.max_dec);
-    println!("Max magnitude: {}", args.max_magnitude);
-
-    let start = Instant::now();
-    let stars = read_stars(
-        &args.file,
-        args.min_ra,
-        args.max_ra,
-        args.min_dec,
-        args.max_dec,
-        args.max_magnitude,
-    )?;
-    let read_duration = start.elapsed();
-
-    println!("Time taken to read and filter stars: {:?}", read_duration);
-    println!("Total stars after filtering: {}", stars.len());
-
-    println!("\nFirst {} stars:", args.display_count);
-    for (i, star) in stars.iter().enumerate() {
-        if i >= args.display_count && args.display_count != 0 {
-            break;
-        }
-        println!(
-            "Star {}: RA={:.2}, Dec={:.2}, Mag={:.2}",
-            i, star.ra_deg, star.de_deg, star.mag
-        );
-    }
-
-    let render_start = Instant::now();
-    let img = render_stars(
-        &stars,
-        args.width,
-        args.height,
-        args.min_ra,
-        args.max_ra,
-        args.min_dec,
-        args.max_dec,
-    );
-    img.save(&args.output)?;
-    let render_duration = render_start.elapsed();
-
-    println!("Time taken to render and save image: {:?}", render_duration);
-    println!("Image saved as: {}", args.output);
-    println!("Total time elapsed: {:?}", start.elapsed());
-
-    Ok(())
 }
 
 #[pyfunction]
