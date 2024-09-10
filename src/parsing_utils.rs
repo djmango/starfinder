@@ -1,11 +1,10 @@
 use csv::ReaderBuilder;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io;
-use std::collections::HashSet;
 use thiserror::Error;
 
-use crate::coords::EquatorialCoords;
-use crate::star::Star;
+use crate::types::{EquatorialCoords, Star};
 
 /// Errors that can occur during star catalog reading.
 #[derive(Error, Debug)]

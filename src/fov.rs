@@ -1,7 +1,8 @@
-use crate::coords::{CartesianCoords, EquatorialCoords};
 use nalgebra::{SMatrix, Vector3};
 use std::collections::HashSet;
 use std::f64::consts::PI;
+
+use crate::types::{CartesianCoords, EquatorialCoords};
 
 pub const GRID_RESOLUTION: f64 = 360.0;
 
@@ -29,14 +30,17 @@ pub fn get_fov(
     };
     let fov_steps_w = ((fov_w / step_size).ceil() + 1.0) as i32;
     let fov_steps_h = ((fov_h / step_size).ceil() + 1.0) as i32;
-    let mut scatter_shot : Vec<CartesianCoords> = Vec::new();
+    let mut scatter_shot: Vec<CartesianCoords> = Vec::new();
 
     for y in 0..fov_steps_h {
         for x in 0..fov_steps_w {
-            scatter_shot.push(EquatorialCoords {
-                ra: bottom_left.ra + (x as f64 * step_size),
-                dec: bottom_left.dec + (y as f64 * step_size),
-            }.to_cartesian());
+            scatter_shot.push(
+                EquatorialCoords {
+                    ra: bottom_left.ra + (x as f64 * step_size),
+                    dec: bottom_left.dec + (y as f64 * step_size),
+                }
+                .to_cartesian(),
+            );
         }
     }
 
@@ -73,7 +77,8 @@ pub fn get_fov(
         // Row 3
         y_roll_axis.x * y_roll_axis.z * (1.0 - dec_dif.cos()) - (y_roll_axis.y * dec_dif.sin()),
         y_roll_axis.y * y_roll_axis.z * (1.0 - dec_dif.cos()) + (y_roll_axis.x * dec_dif.sin()),
-        y_roll_axis.z.powi(2) * (1.0 - dec_dif.cos()) + dec_dif.cos(),);
+        y_roll_axis.z.powi(2) * (1.0 - dec_dif.cos()) + dec_dif.cos(),
+    );
     let z_roll = SMatrix::<f64, 3, 3>::new(
         // Row 1
         c_cartesian.x.powi(2) * (1.0 - roll.cos()) + roll.cos(),
@@ -95,12 +100,14 @@ pub fn get_fov(
         let vec: Vector3<f64> = Vector3::new(p.x, p.y, p.z);
         let transformed = transform * vec;
         let grid_coord = CartesianCoords {
-            x: transformed[(0,0)],
-            y: transformed[(1,0)],
-            z: transformed[(2,0)],
-        }.to_equatorial().to_grid();
+            x: transformed[(0, 0)],
+            y: transformed[(1, 0)],
+            z: transformed[(2, 0)],
+        }
+        .to_equatorial()
+        .to_grid();
         final_grid.insert(grid_coord);
-    };
+    }
 
     final_grid
 }

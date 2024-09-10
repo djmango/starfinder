@@ -1,9 +1,7 @@
-use crate::coords::EquatorialCoords;
-use crate::star::Star;
 use image::{ImageBuffer, Rgb};
 use nalgebra::SMatrix;
-// use spec_math::cephes64::j1;
-// use std::f64::consts::PI;
+
+use crate::types::{EquatorialCoords, Star};
 
 pub fn render_stars(
     stars: Vec<Star>,
@@ -23,8 +21,10 @@ pub fn render_stars(
         .map(|s| s.mag)
         .fold(f64::NEG_INFINITY, f64::max);
     let z_roll_mat = SMatrix::<f64, 2, 2>::new(
-        fov_roll.cos(), -fov_roll.sin(),
-        fov_roll.sin(), fov_roll.cos(),
+        fov_roll.cos(),
+        -fov_roll.sin(),
+        fov_roll.sin(),
+        fov_roll.cos(),
     );
     let pixel_ratio_w = width as f64 / fov_w;
     let pixel_ratio_h = height as f64 / fov_h;

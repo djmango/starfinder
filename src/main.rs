@@ -1,11 +1,11 @@
 use clap::Parser;
-use starfinder::coords::{EquatorialCoords};
-use starfinder::fov::{get_fov};
-use starfinder::parsing_utils::{read_stars};
-use starfinder::rendering::{render_stars};
 use std::path::PathBuf;
 use std::time::Instant;
 
+use starfinder::fov::get_fov;
+use starfinder::parsing_utils::read_stars;
+use starfinder::rendering::render_stars;
+use starfinder::types::EquatorialCoords;
 
 /// CLI Arguments
 #[derive(Parser, Debug)]
@@ -108,13 +108,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 2) Read stars and filter against rolled_fov to create subset of stars in view of the image
     let read_stars_start = Instant::now();
     let stars_in_fov = read_stars(args.source, rolled_fov, args.max_magnitude)?;
-    println!("Total time to read and parse stars: {:?}", read_stars_start.elapsed());
+    println!(
+        "Total time to read and parse stars: {:?}",
+        read_stars_start.elapsed()
+    );
 
     // 4) Render stars in FOV
     let render_stars_start = Instant::now();
-    let img = render_stars(stars_in_fov, args.width, args.height, center, fov_w, fov_h, roll);
+    let img = render_stars(
+        stars_in_fov,
+        args.width,
+        args.height,
+        center,
+        fov_w,
+        fov_h,
+        roll,
+    );
     img.save(&args.output)?;
-    println!("Total parse and write stars: {:?}", render_stars_start.elapsed());
+    println!(
+        "Total parse and write stars: {:?}",
+        render_stars_start.elapsed()
+    );
 
     println!("Total run time elapsed: {:?}", run_start.elapsed());
 

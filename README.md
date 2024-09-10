@@ -3,9 +3,13 @@
 `starfinder` is a Rust & Python package that provides functionality to read, process, and render star data from the Tycho-2 catalog. It's built with Rust for performance and exposes a Python API for ease of use.
 
 ## Setup
-https://archive.eso.org/ASTROM/TYC-2/data/
 
-Download catalog.dat from there, put it in data/tycho2/
+1. Download the Tycho-2 catalog:
+
+   - Visit https://archive.eso.org/ASTROM/TYC-2/data/
+   - Download `catalog.dat` and place it in `data/tycho2/`
+
+2. Ensure your project structure looks like this:
 
 ```
 .
@@ -14,208 +18,115 @@ Download catalog.dat from there, put it in data/tycho2/
 ├── README.md
 ├── data
 │   └── tycho2
-│   ├── catalog.dat
-│   ├── index.dat
-│   ├── suppl_1.dat
-│   └── suppl_2.dat
+│       ├── catalog.dat
+│       ├── index.dat
+│       ├── suppl_1.dat
+│       └── suppl_2.dat
 ├── poetry.lock
 ├── pyproject.toml
-├── src
-│   └── bin
-│       └── main.rs
-│       └── data-transformer.rs
+└── src
 ```
 
-# Run
-To run the renderer with defaults
-```
+## Running the Renderer
+
+### Using Cargo (Rust)
+
+To run the renderer with default settings:
+
+```bash
 cargo run
 ```
 
-To run the renderer with cmd arg overrides:
-```
-cargo run -- --roll-deg 0.0 --fov-w-deg 75.0 --fov-h-deg 50.0
-```
-### Cmd args
-<table>
-    <tr>
-        <td>██ Flag ██</td>
-        <td>██ Description ██</td>
-        <td>██ Default value ██</td>
-        <td>██ Notes ██</td>
-    </tr>
-    <tr>
-        <td>--source, -s</td>
-        <td>The source file to run</td>
-        <td>`data/tycho2/catalog.dat`</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>--center-ra</td>
-        <td>FOV center point right ascension</td>
-        <td>`180.0`</td>
-        <td>In degrees</td>
-    </tr>
-    <tr>
-        <td>--center-dec</td>
-        <td>FOV center point declination</td>
-        <td>`0.0`</td>
-        <td>In degrees</td>
-    </tr>
-    <tr>
-        <td>--fov-w</td>
-        <td>Width of FOV</td>
-        <td>`60.0`</td>
-        <td>In degrees</td>
-    </tr>
-    <tr>
-        <td>--fov-h</td>
-        <td>Height of FOV</td>
-        <td>`45.0`</td>
-        <td>In degrees</td>
-    </tr>
-    <tr>
-        <td>--roll</td>
-        <td>Critical for determining FOV and should always be specified. Camera sensor roll with respect to the celestial sphere.</td>
-        <td>`0.0`</td>
-        <td>In degrees</td>
-    </tr>
-    <tr>
-        <td>--max-magnitude</td>
-        <td>Maximum visual magnitude (lower is brighter).</td>
-        <td>`12.0`</td>
-        <td>This is essentially a filter, and dimmer stars will be ignored. A higher value can have an effect on performance at the cost of realism. Defaults to a maximum dimmer than Tycho2 dataset - i.e. shows all stars.</td>
-    </tr>
-    <tr>
-        <td>--lambda-nm</td>
-        <td>Targeted wavelength - critical for airy disc rendering (nanometers). Default to visible spectrum</td>
-        <td>`540.0`</td>
-        <td>In nanometers. Currently unused - for future revision with PSF rendering</td>
-    </tr>
-    <tr>
-        <td>--pixel-size-m</td>
-        <td>Simulated sensor physical pixel size</td>
-        <td>`3e-6`</td>
-        <td>In meters. Currently unused - for future revision with PSF rendering</td>
-    </tr>
-    <tr>
-        <td>--width</td>
-        <td>Output image width. Should match sensor pixel count.</td>
-        <td>`800`</td>
-        <td>In pixels. Larger values will impact performance.</td>
-    </tr>
-    <tr>
-        <td>--height</td>
-        <td>Output image height. Should match sensor pixel count.</td>
-        <td>`600`</td>
-        <td>In pixels. Larger values will impact performance.</td>
-    </tr>
-    <tr>
-        <td>--output, -o</td>
-        <td>Output filename</td>
-        <td>`star_map.png`</td>
-        <td></td>
-    </tr>
-</table>
+To run with custom arguments:
 
-
-# C++
-
-```
-mkdir build
-cd build
-cmake ..
-make
-render --max-ra=60 --min-dec=-30 --max-dec=30 --max-magnitude=11 --width=1000 --height=800 --output=example.png ../data/tycho2/catalog.dat
+```bash
+cargo run -- --roll 0.0 --fov-w 75.0 --fov-h 50.0
 ```
 
-## Installation
+### Command-line Arguments
 
-To install `starfinder`, you can use pip:
-https://pyo3.rs/v0.22.2/getting-started
+| Flag            | Description                      | Default                   | Notes             |
+| --------------- | -------------------------------- | ------------------------- | ----------------- |
+| --source, -s    | Source file path                 | `data/tycho2/catalog.dat` |                   |
+| --center-ra     | FOV center point right ascension | 180.0                     | In degrees        |
+| --center-dec    | FOV center point declination     | 0.0                       | In degrees        |
+| --fov-w         | Width of FOV                     | 60.0                      | In degrees        |
+| --fov-h         | Height of FOV                    | 45.0                      | In degrees        |
+| --roll          | Camera sensor roll               | 0.0                       | In degrees        |
+| --max-magnitude | Maximum visual magnitude         | 12.0                      | Lower is brighter |
+| --lambda-nm     | Targeted wavelength              | 540.0                     | In nanometers     |
+| --pixel-size-m  | Simulated sensor pixel size      | 3e-6                      | In meters         |
+| --width         | Output image width               | 800                       | In pixels         |
+| --height        | Output image height              | 600                       | In pixels         |
+| --output, -o    | Output filename                  | `star_map.png`            |                   |
+
+## Python Installation and Usage
+
+### Installation
+
+Ensure you have Python 3.8 or later, then:
+
+`bash`
+pip install starfinder
+
+````
+Or if you want to install the package in development mode:
 
 ```bash
 pipx install maturin
 maturin develop
-```
+````
 
-Note: This package requires Python 3.8 or later.
-
-## Usage
-
-Here's a basic example of how to use `starfinder`:
+### Basic Usage
 
 ```python
 from starfinder import StarCatalogArgs, process_star_catalog_py
 
-# Create arguments for star catalog processing
 args = StarCatalogArgs(
-    file="path/to/your/tycho2_catalog.dat",
-    display_count=10,
-    min_ra=0.0,
-    max_ra=360.0,
-    min_dec=-90.0,
-    max_dec=90.0,
+    source="data/tycho2/catalog.dat",
+    center_ra=180.0,
+    center_dec=0.0,
+    fov_w=60.0,
+    fov_h=45.0,
+    roll=0.0,
     max_magnitude=6.0,
+    lambda_nm=540.0,
+    pixel_size_m=3e-6,
     width=800,
     height=600,
     output="star_map.png"
 )
 
-# Process the star catalog
 process_star_catalog_py(args)
 ```
-
-This will read the Tycho-2 catalog, filter the stars based on the given parameters, and generate a star map image.
 
 ## API Reference
 
 ### `StarCatalogArgs`
 
-This class represents the arguments for star catalog processing.
-
 Parameters:
 
-- `file` (str): Path to the Tycho-2 catalog file
-- `display_count` (int): Number of stars to display in the console output (0 for all)
-- `min_ra` (float): Minimum Right Ascension in degrees
-- `max_ra` (float): Maximum Right Ascension in degrees
-- `min_dec` (float): Minimum Declination in degrees
-- `max_dec` (float): Maximum Declination in degrees
-- `max_magnitude` (float): Maximum visual magnitude (lower is brighter)
-- `width` (int): Output image width in pixels
-- `height` (int): Output image height in pixels
-- `output` (str): Output image file name
+- `source` (str): Path to the Tycho-2 catalog file
+- `center_ra` (float): Right Ascension of FOV center (degrees)
+- `center_dec` (float): Declination of FOV center (degrees)
+- `fov_w` (float): FOV width (degrees)
+- `fov_h` (float): FOV height (degrees)
+- `roll` (float): Camera roll (degrees)
+- `max_magnitude` (float): Maximum visual magnitude
+- `lambda_nm` (float): Targeted wavelength (nanometers)
+- `pixel_size_m` (float): Sensor pixel size (meters)
+- `width` (int): Output image width (pixels)
+- `height` (int): Output image height (pixels)
+- `output` (str): Output image filename
 
 ### `process_star_catalog_py(args: StarCatalogArgs) -> None`
 
-This function processes the star catalog based on the provided arguments.
+Processes the star catalog based on the provided arguments.
 
-## Example
+## Contributing
 
-Here's a more detailed example that demonstrates how to use `starfinder` to create a star map of the brightest stars:
+Contributions to `starfinder` are welcome! Please feel free to submit a Pull Request.
 
-```python
-from starfinder import StarCatalogArgs, process_star_catalog_py
+## License
 
-# Create arguments for star catalog processing
-args = StarCatalogArgs(
-    file="tycho2_catalog.dat",
-    display_count=20,  # Display info for the 20 brightest stars
-    min_ra=0.0,
-    max_ra=360.0,
-    min_dec=-90.0,
-    max_dec=90.0,
-    max_magnitude=3.0,  # Only include stars brighter than magnitude 3
-    width=1200,
-    height=800,
-    output="bright_stars_map.png"
-)
-
-# Process the star catalog
-process_star_catalog_py(args)
-
-print(f"Star map has been generated: {args.output}")
-```
-
-This script will create a star map of the brightest stars (magnitude 3.0 or brighter) across the entire sky, output information about the 20 brightest stars to the console, and save the star map as "bright_stars_map.png".
+This project is licensed under the GPLv3 License - see the LICENSE file for details.

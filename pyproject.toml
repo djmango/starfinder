@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "starfinder"
-version = "1.0.0"
+version = "1.1.0"
 description = "Generate images of the sky w/ accurate stars for star sensor simulation"
 requires-python = ">=3.8"
 classifiers = [
