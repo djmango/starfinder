@@ -4,12 +4,24 @@ build-backend = "maturin"
 
 [project]
 name = "starfinder"
+version = "1.0.0"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Operating System :: OS Independent",
 ]
 dynamic = ["version"]
+authors = [
+  { name="Sulaiman Khan Ghori", email="sulaiman.ghori@outlook.com" },
+]
+description = "Generate images of the sky w/ accurate stars for star sensor simulation"
+readme = "README.md"
+
+[project.urls]
+Homepage = "https://github.com/djmango/starfinder"
+Issues = "https://github.com/djmango/starfinder/issues"
+
 [tool.maturin]
 features = ["pyo3/extension-module"]
