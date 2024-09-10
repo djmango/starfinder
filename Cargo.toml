@@ -1,12 +1,16 @@
 [package]
 name = "starfinder"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 license-file = "LICENSE"
 description = "starfinder is a Rust & Python package that provides functionality to read, process, and render star data from the Tycho-2 catalog. It's built with Rust for performance and exposes a Python API for ease of use."
 homepage = "https://github.com/djmango/starfinder"
 repository = "https://github.com/djmango/starfinder"
 readme = "README.md"
+exclude = [
+    "data/*",
+    "images/*",
+]
 
 [dependencies]
 clap = { version = "4.5.16", features = ["derive"] }
