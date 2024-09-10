@@ -92,16 +92,20 @@ pub fn render_stars(
     );
     let pixel_ratio_w = width as f64 / fov_w;
     let pixel_ratio_h = height as f64 / fov_h;
+    let x_offset = width as f64 / 2.0;
+    let y_offset = width as f64 / 2.0;
 
     for star in stars {
         let std_star_coords = star.coords.to_standard(center);
         let std_star_mat = SMatrix::<f64, 2, 1>::new(std_star_coords.x, std_star_coords.y);
         let final_star_pos = z_roll_mat * std_star_mat;
 
-        let x = final_star_pos.x * pixel_ratio_w;
-        let y = final_star_pos.y * pixel_ratio_h;
+        let x = final_star_pos.x * pixel_ratio_w + x_offset;
+        let y = final_star_pos.y * pixel_ratio_h + y_offset;
+        println!("(x, y) | ({},{})", x, y);
         if (x < 0.0 || x > width as f64 || y < 0.0 || y > height as f64) {
-            break;
+            println!("Discarding star at ({}, {})", x, y);
+            continue;
         }
 
         // Inverse the magnitude scale (brighter stars have lower magnitudes)
@@ -110,23 +114,8 @@ pub fn render_stars(
         let brightness = (normalized_mag.powf(2.5) * 255.0) as u8;
         let color = Rgb([brightness, brightness, brightness]);
 
-        //img.put_pixel((x + ((width as f64) / 2.0)) as u32, (y + (height as f64) / 2.0) as u32, color);
         img.put_pixel(x as u32, y as u32, color);
     }
-    /*let std_star_coords = stars[0].coords.to_standard(center);
-    let std_star_mat = SMatrix::<f64, 2, 1>::new(std_star_coords.x, std_star_coords.y);
-    let final_star_pos = z_roll_mat * std_star_mat;
-
-    let x = final_star_pos.x * pixel_ratio_w;
-    let y = final_star_pos.y * pixel_ratio_h;
-
-    // Inverse the magnitude scale (brighter stars have lower magnitudes)
-    let normalized_mag = (max_mag - stars[0].mag) / (max_mag - min_mag);
-    // Apply a non-linear scaling to emphasize brighter stars
-    let brightness = 255;
-    let color = Rgb([brightness, brightness, brightness]);
-println!("x, y: {}, {}", x, y);
-    img.put_pixel((x + ((width as f64) / 2.0)) as u32, (y + (height as f64) / 2.0) as u32, color);*/
 
     img
 }

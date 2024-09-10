@@ -20,7 +20,7 @@ Download catalog.dat from there, put it in data/tycho2/
 
 To run the airy disc renderer
 ```
-cargo run --bin airy_renderer
+cargo run --bin psf_renderer -- --roll-deg 0.0
 ```
 
 To run the original proof of concept generator:
