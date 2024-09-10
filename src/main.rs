@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use tycho2_renderer::{process_star_catalog, StarCatalogArgs};
+use starfinder::{process_star_catalog, StarCatalogArgs};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

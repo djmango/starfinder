@@ -1,5 +1,5 @@
 pub mod render;
-pub mod tycho2;
+pub mod star_catalog;
 pub mod types;
 
 use clap::Parser;
@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 use std::time::Instant;
 
 use crate::render::render_stars;
-use crate::tycho2::read_stars;
+use crate::star_catalog::read_stars;
 
 #[pyclass]
 #[derive(Parser, Debug, Clone)]
@@ -125,7 +125,7 @@ fn process_star_catalog_py(args: StarCatalogArgs) -> PyResult<()> {
 /// the `lib.name` setting in the `Cargo.toml`, else Python will not be able to
 /// import the module.
 #[pymodule]
-fn tycho2_renderer(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn starfinder(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<StarCatalogArgs>()?;
     m.add_function(wrap_pyfunction!(process_star_catalog_py, m)?)?;
     Ok(())
