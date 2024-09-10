@@ -1,9 +1,8 @@
-// #![allow(warnings)]
 use clap::Parser;
-use starfield_renderer::coords::{EquatorialCoords};
-use starfield_renderer::fov::{get_fov};
-use starfield_renderer::parsing_utils::{read_stars};
-use starfield_renderer::rendering::{render_stars};
+use starfinder::coords::{EquatorialCoords};
+use starfinder::fov::{get_fov};
+use starfinder::parsing_utils::{read_stars};
+use starfinder::rendering::{render_stars};
 use std::path::PathBuf;
 use std::time::Instant;
 

@@ -49,7 +49,7 @@ pub fn render_stars(
         // Inverse the magnitude scale (brighter stars have lower magnitudes)
         let normalized_mag = (max_mag - star.mag) / (max_mag - min_mag);
         // Apply a non-linear scaling to emphasize brighter stars
-        let brightness = (normalized_mag.powf(2.5) * 255.0) as u8;
+        let brightness = (normalized_mag.powf(2.0) * 255.0) as u8;
         let color = Rgb([brightness, brightness, brightness]);
 
         img.put_pixel(x as u32, y as u32, color);

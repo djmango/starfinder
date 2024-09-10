@@ -22,7 +22,6 @@ pub enum CatalogError {
     MissingMagnitude,
 }
 
-
 /// Reads and filters stars from the Tycho-2 catalog file.
 /// https://heasarc.gsfc.nasa.gov/w3browse/all/tycho2.html
 /// http://tdc-www.harvard.edu/catalogs/tycho2.format.html

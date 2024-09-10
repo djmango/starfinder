@@ -1,21 +1,28 @@
-[tool.poetry]
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
 name = "starfinder"
-version = "0.1.0"
-description = ""
-authors = ["Sulaiman Ghori <sulaiman.ghori@outlook.com>", "Layton Miller <layton.r.miller@gmail.com>"]
+version = "1.0.0"
+description = "Generate images of the sky w/ accurate stars for star sensor simulation"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+authors = [
+  { name="Sulaiman Khan Ghori", email="sulaiman.ghori@outlook.com" },
+  { name="Layton Miller", email="layton.r.miller@gmail.com" },
+]
 readme = "README.md"
 
-[tool.poetry.dependencies]
-python = "^3.12"
-matplotlib = "^3.9.2"
-numpy = "^2.0.1"
-pandas = "^2.2.2"
-scipy = "^1.14.1"
+[project.urls]
+Homepage = "https://github.com/djmango/starfinder"
+Issues = "https://github.com/djmango/starfinder/issues"
 
-
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.29.5"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.maturin]
+features = ["pyo3/extension-module"]
