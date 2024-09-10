@@ -42,9 +42,11 @@ render --max-ra=60 --min-dec=-30 --max-dec=30 --max-magnitude=11 --width=1000 --
 ## Installation
 
 To install `starfinder`, you can use pip:
+https://pyo3.rs/v0.22.2/getting-started
 
 ```bash
-pip install starfinder
+pipx install maturin
+maturin develop
 ```
 
 Note: This package requires Python 3.8 or later.
@@ -127,4 +129,3 @@ print(f"Star map has been generated: {args.output}")
 ```
 
 This script will create a star map of the brightest stars (magnitude 3.0 or brighter) across the entire sky, output information about the 20 brightest stars to the console, and save the star map as "bright_stars_map.png".
-
