@@ -14,4 +14,4 @@ thiserror = "1.0.63"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "tycho2_renderer"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
