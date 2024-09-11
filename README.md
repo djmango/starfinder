@@ -39,10 +39,11 @@ _any_ star catalog as long as it fulfills the following requirements:
 3) Star data includes vt_mag or bt_mag, preferably both
 
 Specify the column number of each of these four data points when calling the optimizer (bt and vt
-mag are optional, but at least one is required). To optimize for the Tycho 2 catalog, run the
-following command:
+mag are optional, but at least one is required). You'll also need to include the max FOV dimension 
+of your sensor to optimize properly. If your FOV changes, you'll need to re-run the optimizer.
+To optimize for the Tycho 2 catalog, run the following command:
 ```bash
-cargo run --bin optimize -- --idx-ra 24 --idx-dec 25 --idx-bt-mag 17 --idx-vt-mag 19
+cargo run --bin optimize -- --idx-ra 24 --idx-dec 25 --idx-bt-mag 17 --idx-vt-mag 19 --fov-max 60
 ```
 For other catalogs that satisfy the optimizer's requirements, simply replace the index values above
 with the column indexes for those items in your catalog's data file.
@@ -117,7 +118,7 @@ maturin develop
 from starfinder import StarCatalogArgs, process_star_catalog_py
 
 args = StarCatalogArgs(
-    source="data/tycho2/catalog.dat",
+    source="data/optimized.dat",
     center_ra=180.0,
     center_dec=0.0,
     fov_w=60.0,

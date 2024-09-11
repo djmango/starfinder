@@ -61,7 +61,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let out_file = File::create(args.output)?;
     let mut out_buffer = BufWriter::new(out_file);
-    let fov_scale = args.fov_max.to_radians()/(4.0*PI)
+    let fov_scale = args.fov_max.to_radians()/(4.0*PI);
+
     for (i, result) in csv_reader.records().enumerate() {
         let record = result?;
 

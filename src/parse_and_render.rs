@@ -48,6 +48,7 @@ pub fn parse_and_render(args: &StarCatalogArgs) -> Result<(), Box<dyn std::error
     );
 
     println!("Total run time elapsed: {:?}", run_start.elapsed());
+    println!("Starfield render complete! File output at: {}", args.output);
 
     Ok(())
 }
