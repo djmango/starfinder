@@ -69,7 +69,7 @@ impl EquatorialCoords {
 
     pub fn to_grid(&self) -> EquatorialCoords {
         EquatorialCoords {
-            ra: ((self.ra / (2.0 * PI)) * (1.0 - (2.0 * self.dec.abs() / PI)) * GRID_RESOLUTION).round(),
+            ra: (self.ra / (2.0 * PI) * (1.0 - (2.0 * self.dec.abs() / PI)).powf(0.5) * GRID_RESOLUTION).round(),
             dec: (self.dec / (2.0 * PI) * GRID_RESOLUTION).round(),
         }
     }

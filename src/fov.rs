@@ -17,31 +17,7 @@ pub fn get_fov(
         ra: 180.0_f64.to_radians(),
         dec: 0.0_f64.to_radians(),
     };
-    let mut short_roll = roll;
-    let mut fov_w = fov_w;
-    let mut fov_h = fov_h;
-    if roll < 0.0 {
-        short_roll = roll + 2.0 * PI;
-    } else
-    if roll > 2.0 * PI {
-        short_roll = roll - 2.0 * PI;
-    }
 
-    if roll > 7.0 * PI / 4.0{
-        short_roll = roll - 2.0 * PI;
-    }else if roll > 5.0 * PI / 4.0{
-        let temp = fov_w;
-        fov_w = fov_h;
-        fov_h = temp;
-        short_roll = roll - (3.0 * PI / 2.0);
-    }else if roll > 3.0 * PI / 4.0{
-        short_roll = roll - PI;
-    }else if roll > PI / 4.0{
-        let temp = fov_w;
-        fov_w = fov_h;
-        fov_h = temp;
-        short_roll = roll - (PI / 2.0);
-    }
     let ra_dif = center.ra - view_init_center.ra;
     let dec_dif = center.dec - view_init_center.dec;
     // Calculate FOV bounds in cartesian coords
@@ -113,12 +89,12 @@ pub fn get_fov(
         0.0,
         // Row 2
         0.0,
-        short_roll.cos(),
-        -short_roll.sin(),
+        roll.cos(),
+        -roll.sin(),
         // Row 3
         0.0,
-        short_roll.sin(),
-        short_roll.cos(),
+        roll.sin(),
+        roll.cos(),
     );
 
 
