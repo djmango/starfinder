@@ -21,7 +21,7 @@ pub enum CatalogError {
     MissingMagnitude,
 }
 
-/// Reads and filters stars from the Tycho-2 catalog file.
+/// Reads and filters stars from the optimized data file.
 /// https://heasarc.gsfc.nasa.gov/w3browse/all/tycho2.html
 /// http://tdc-www.harvard.edu/catalogs/tycho2.format.html
 /// All values should be in radians. While star coords in the catalog are in degrees, the coordinate
@@ -43,9 +43,12 @@ pub fn read_stars<P: AsRef<std::path::Path>>(
 
     for (i, result) in csv_reader.records().enumerate() {
         let record = result?;
-        match parse_star_record(&record) {
-            Ok(star) => {
-                let grid_coords = &star.coords.to_grid();
+        // Use the indexes for the optimized data file!
+        match parse_optimized_star_record(&record) {
+            Ok(data) => {
+                let star = data.0;
+                let grid_coords = data.1;
+
                 if star.mag < max_magnitude && filter_grid.contains(&grid_coords) {
                     stars.push(star);
                 }
@@ -68,11 +71,37 @@ pub fn read_stars<P: AsRef<std::path::Path>>(
     Ok(stars)
 }
 
+/// Parses the *optimize* star data file and pulls out the star as well as its pre-computed ra/dec
+/// in the localization grid format as a separate EquatorialCoordinate
+pub fn parse_optimized_star_record(record: &csv::StringRecord) -> Result<(Star, EquatorialCoords), CatalogError> {
+    Ok((
+        Star {
+            coords: EquatorialCoords {
+                ra: parse_field(record, 0, "RA")?,
+                dec: parse_field(record, 1, "Dec")?,
+            },
+            mag: parse_field(record, 4, "Magnitude")?,
+        },
+        EquatorialCoords {
+            ra: parse_field(record, 2, "GridRA")?,
+            dec: parse_field(record, 3, "GridDec")?,
+        }
+    ))
+}
+
 /// Parses a single record from the catalog into a Star struct.
-pub fn parse_star_record(record: &csv::StringRecord) -> Result<Star, CatalogError> {
-    let ra = parse_field(record, 24, "RA")?;
-    let dec = parse_field(record, 25, "Dec")?;
-    let mag = parse_magnitude(record)?;
+/// Defaults for the index positions of data fields are set to Tycho 2 catalog format. This can be
+/// specified differently if a different star catalog is to be used
+pub fn parse_star_record(
+    record: &csv::StringRecord,
+    idx_ra: Option<usize>,
+    idx_dec: Option<usize>,
+    idx_bt_mag: Option<usize>,
+    idx_vt_mag: Option<usize>,
+) -> Result<Star, CatalogError> {
+    let ra = parse_field(record, idx_ra.unwrap_or(24), "RA")?;
+    let dec = parse_field(record, idx_dec.unwrap_or(25), "Dec")?;
+    let mag = parse_magnitude(record, idx_bt_mag, idx_vt_mag)?;
 
     Ok(Star {
         coords: EquatorialCoords {
@@ -84,9 +113,15 @@ pub fn parse_star_record(record: &csv::StringRecord) -> Result<Star, CatalogErro
 }
 
 /// Get magnitude off a star record
-pub fn parse_magnitude(record: &csv::StringRecord) -> Result<f64, CatalogError> {
-    let bt_mag = parse_field(record, 17, "BT magnitude").ok();
-    let vt_mag = parse_field(record, 19, "VT magnitude").ok();
+/// Defaults for the index positions of data fields are set to Tycho 2 catalog format. This can be
+/// specified differently if a different star catalog is to be used
+pub fn parse_magnitude(
+    record: &csv::StringRecord,
+    idx_bt_mag: Option<usize>,
+    idx_vt_mag: Option<usize>,
+) -> Result<f64, CatalogError> {
+    let bt_mag = parse_field(record, idx_bt_mag.unwrap_or(17), "BT magnitude").ok();
+    let vt_mag = parse_field(record, idx_vt_mag.unwrap_or(19), "VT magnitude").ok();
 
     // println!("Debug: BT_Mag = {:?}, VT_Mag = {:?}", bt_mag, vt_mag);
 
