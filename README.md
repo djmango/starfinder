@@ -2,6 +2,10 @@
 
 `starfinder` is a Rust & Python package that provides functionality to read, process, and render star data from the Tycho-2 catalog. It's built with Rust for performance and exposes a Python API for ease of use.
 
+![Starfinder output](https://raw.githubusercontent.com/djmango/starfinder/master/example_output.png "Example Starfinder Output")
+
+<small>Pictured above: Example Starfinder output</small>
+
 ## Setup
 
 1. Download the Tycho-2 catalog:
