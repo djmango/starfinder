@@ -1,7 +1,7 @@
 use clap::Parser;
 
 use starfinder::parse_and_render::parse_and_render;
-use starfinder::types::{StarCatalogArgs};
+use starfinder::types::StarCatalogArgs;
 
 /// CLI Arguments
 #[derive(Parser, Debug)]
