@@ -47,6 +47,8 @@ cargo run --bin optimize -- --idx-ra 24 --idx-dec 25 --idx-bt-mag 17 --idx-vt-ma
 For other catalogs that satisfy the optimizer's requirements, simply replace the index values above
 with the column indexes for those items in your catalog's data file.
 
+If view changes, you will need to re-optimize with new fov_max.
+
 ### Optimizer command-line arguments
 
 | Flag         | Description                  | Default                   | Notes                        |
@@ -58,6 +60,7 @@ with the column indexes for those items in your catalog's data file.
 | --idx-bt-mag | Index of bt_mag              |                           |                              |
 | --idx-ra     | Index of right ascension     |                           |                              |
 | --idx-dec    | Index of declination         |                           |                              |
+| --fov-max    | Max value of fov w/h         |                           |                              |
 
 
 ### Running the renderer 
