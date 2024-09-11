@@ -15,7 +15,7 @@ pub fn get_fov(
         ra: 180.0_f64.to_radians(),
         dec: 0.0_f64.to_radians(),
     };
-    let fov_size = fov_w.max(fov_h)/ (4.0 * PI);
+    let fov_size = fov_w.max(fov_h);
     let ra_dif = center.ra - view_init_center.ra;
     let dec_dif = center.dec - view_init_center.dec;
     // Calculate FOV bounds in cartesian coords
@@ -107,7 +107,7 @@ pub fn get_fov(
             z: transformed[(2, 0)],
         }
         .to_equatorial()
-        .to_grid(fov_size);
+        .to_grid(fov_size/(4.0*PI));
         let next_coord = EquatorialCoords {
             ra: grid_coord.ra + 1.0,
             dec: grid_coord.dec,

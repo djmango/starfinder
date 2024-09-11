@@ -68,7 +68,7 @@ impl EquatorialCoords {
     }
 
     pub fn to_grid(&self, fov_size: f64) -> EquatorialCoords {
-        let clamped_size = fov_size.clamp(0.02, 1);
+        let clamped_size = fov_size.clamp(0.02, 1.0);
         EquatorialCoords {
             ra: (self.ra / (2.0 * PI) * (1.0 - (2.0 * self.dec.abs() / PI)).powf(0.5) / clamped_size).round(),
             dec: (self.dec / (2.0 * PI) / clamped_size).round(),
