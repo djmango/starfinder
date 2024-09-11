@@ -30,6 +30,7 @@ pub fn read_stars<P: AsRef<std::path::Path>>(
     path: P,
     filter_grid: HashSet<EquatorialCoords>,
     max_magnitude: f64,
+    fov_size: f64,
 ) -> Result<Vec<Star>, CatalogError> {
     let file = File::open(path)?;
     let reader = io::BufReader::new(file);
@@ -45,7 +46,7 @@ pub fn read_stars<P: AsRef<std::path::Path>>(
         let record = result?;
         match parse_star_record(&record) {
             Ok(star) => {
-                let grid_coords = &star.coords.to_grid();
+                let grid_coords = &star.coords.to_grid(fov_size);
                 if star.mag < max_magnitude && filter_grid.contains(&grid_coords) {
                     stars.push(star);
                 }

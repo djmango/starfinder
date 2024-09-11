@@ -1,5 +1,5 @@
 use std::time::Instant;
-
+use std::f64::consts::PI;
 use crate::fov;
 use crate::parsing_utils::read_stars;
 use crate::rendering::render_stars;
@@ -24,7 +24,7 @@ pub fn parse_and_render(args: &StarCatalogArgs) -> Result<(), Box<dyn std::error
 
     // 2) Read stars and filter against rolled_fov to create subset of stars in view of the image
     let read_stars_start = Instant::now();
-    let stars_in_fov = read_stars(&args.source, rolled_fov, args.max_magnitude)?;
+    let stars_in_fov = read_stars(&args.source, rolled_fov, args.max_magnitude, fov_h.max(fov_w)/(4.0*PI))?;
     println!(
         "Total time to read and parse stars: {:?}",
         read_stars_start.elapsed()

@@ -4,8 +4,6 @@ use std::f64::consts::PI;
 
 use crate::types::{CartesianCoords, EquatorialCoords};
 
-pub const GRID_RESOLUTION: f64 = 20.0;
-
 pub fn get_fov(
     center: EquatorialCoords,
     fov_w: f64,
@@ -17,14 +15,14 @@ pub fn get_fov(
         ra: 180.0_f64.to_radians(),
         dec: 0.0_f64.to_radians(),
     };
-
+    let fov_size = fov_w.max(fov_h)/ (4.0 * PI);
     let ra_dif = center.ra - view_init_center.ra;
     let dec_dif = center.dec - view_init_center.dec;
     // Calculate FOV bounds in cartesian coords
     let fov_w_half = fov_w / 2.0;
     let fov_h_half = fov_h / 2.0;
 
-    let step_size = 2.0 * PI / (GRID_RESOLUTION);
+    let step_size = fov_size / 50.0;
     let bottom_left = EquatorialCoords {
         ra: view_init_center.ra - fov_w_half,
         dec: view_init_center.dec - fov_h_half,
@@ -109,7 +107,7 @@ pub fn get_fov(
             z: transformed[(2, 0)],
         }
         .to_equatorial()
-        .to_grid();
+        .to_grid(fov_size);
         let next_coord = EquatorialCoords {
             ra: grid_coord.ra + 1.0,
             dec: grid_coord.dec,
