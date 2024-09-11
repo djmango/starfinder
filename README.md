@@ -96,8 +96,8 @@ cargo run -- --roll 0.0 --fov-w 75.0 --fov-h 50.0
 | --lambda-nm     | Targeted wavelength              | 540.0                     | In nanometers     |
 | --pixel-size-m  | Simulated sensor pixel size      | 3e-6                      | In meters         |
 | --width         | Output image width               | 800                       | In pixels         |
-| --height        | Output image height              | 600                       | In pixels         |
-| --output, -o    | Output filename                  | `star_map.png`            |                   |
+| --height        | Output image height              | 800                       | In pixels         |
+| --output, -o    | Output filename                  | `renders/star_map.png`    |                   |
 
 ## Python Installation and Usage
 
@@ -133,7 +133,7 @@ args = StarCatalogArgs(
     pixel_size_m=3e-6,
     width=800,
     height=600,
-    output="star_map.png"
+    output="renders/star_map.png"
 )
 
 process_star_catalog_py(args)

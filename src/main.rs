@@ -49,11 +49,11 @@ pub struct Args {
     width: u32,
 
     /// Output image height in pixels
-    #[arg(long, default_value_t = 600)]
+    #[arg(long, default_value_t = 800)]
     height: u32,
 
     /// Output image file name
-    #[arg(short, long, default_value = "star_map.png")]
+    #[arg(short, long, default_value = "renders/star_map.png")]
     output: String,
 }
 

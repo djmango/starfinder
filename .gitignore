@@ -250,5 +250,5 @@ docs/_build/
 .python-version
 
 debug.txt
-star_map.png
+renders/
 spaceros/log

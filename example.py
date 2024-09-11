@@ -11,7 +11,7 @@ args = StarCatalogArgs(
     max_magnitude=6.0,
     width=800,
     height=600,
-    output="star_map.png",
+    output="renders/star_map.png",
 )
 
 # Process the star catalog
