@@ -4,6 +4,7 @@ use starfinder::parsing_utils::parse_star_record;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::time::Instant;
+use std::f64::consts::PI;
 
 const CSV_SEPARATOR: char = '|';
 
@@ -34,6 +35,9 @@ pub struct Args {
 
     #[arg(long)]
     idx_dec: usize,
+
+    #[arg(long)]
+    fov_max: f64,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -57,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let out_file = File::create(args.output)?;
     let mut out_buffer = BufWriter::new(out_file);
-
+    let fov_scale = args.fov_max.to_radians()/(4.0*PI)
     for (i, result) in csv_reader.records().enumerate() {
         let record = result?;
 
@@ -71,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             args.idx_vt_mag,
         ) {
             Ok(star) => {
-                let grid_coords = star.coords.to_grid();
+                let grid_coords = star.coords.to_grid(fov_scale);
                 let ra = star.coords.ra;
                 let dec = star.coords.dec;
                 let grid_ra = grid_coords.ra;
