@@ -4,6 +4,8 @@ use std::f64::consts::PI;
 
 use crate::types::{CartesianCoords, EquatorialCoords};
 
+// CAREFUL! If this value is ever changed, the optimize binary needs to be rerun!! The data is
+// optimized against this grid resolution.
 pub const GRID_RESOLUTION: f64 = 360.0;
 
 pub fn get_fov(
@@ -94,7 +96,7 @@ pub fn get_fov(
         c_cartesian.z.powi(2) * (1.0 - roll.cos()) + roll.cos(),
     );
 
-    let transform = x_roll * y_roll * z_roll;
+    let transform = z_roll * y_roll * x_roll;
     let mut final_grid: HashSet<EquatorialCoords> = HashSet::new();
     for p in scatter_shot {
         let vec: Vector3<f64> = Vector3::new(p.x, p.y, p.z);

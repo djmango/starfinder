@@ -11,6 +11,7 @@ exclude = [
     "data/*",
     "images/*",
 ]
+default-run = "starfinder"
 
 [dependencies]
 clap = { version = "4.5.16", features = ["derive"] }

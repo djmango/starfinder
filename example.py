@@ -1,8 +1,8 @@
 from starfinder import StarCatalogArgs, process_star_catalog_py
 
-# Create arguments for star catalog processing
+# Create arguments for star catalog processing. Remember the data needs to be optimized before use
 args = StarCatalogArgs(
-    file="data/tycho2/catalog.dat",
+    file="data/optimized.dat",
     display_count=10,
     min_ra=0.0,
     max_ra=360.0,
