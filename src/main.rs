@@ -1,11 +1,7 @@
 use clap::Parser;
-use std::path::PathBuf;
-use std::time::Instant;
 
-use starfinder::fov::get_fov;
-use starfinder::parsing_utils::read_stars;
-use starfinder::rendering::render_stars;
-use starfinder::types::EquatorialCoords;
+use starfinder::parse_and_render::parse_and_render;
+use starfinder::types::StarCatalogArgs;
 
 /// CLI Arguments
 #[derive(Parser, Debug)]
@@ -18,7 +14,7 @@ pub struct Args {
         value_name = "FILE",
         default_value = "data/tycho2/catalog.dat"
     )]
-    source: PathBuf,
+    source: String,
 
     /// Right Ascension of camera view center point (degrees)
     #[arg(long, default_value_t = 180.0)]
@@ -67,70 +63,21 @@ pub struct Args {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let run_start = Instant::now();
-    let args = Args::parse();
-    let center_ra = args.center_ra.to_radians();
-    let center_dec = args.center_dec.to_radians();
-    let roll = args.roll.to_radians();
-    let fov_w = args.fov_w.to_radians();
-    let fov_h = args.fov_h.to_radians();
-
-    /*println!("================ Cmd args list ===============");
-    println!("Reading stars from: {:?}", args.source);
-    println!("Center - RA (deg): {}", args.center_ra);
-    println!("Center - RA (rad): {}", center_ra);
-    println!("Center - Dec (deg): {}", args.center_dec);
-    println!("Center - Dec (rad): {}", center_dec);
-    println!("FOV width (deg): {}", args.fov_w_deg);
-    println!("FOV width (rad): {}", fov_w);
-    println!("FOV height (deg): {}", args.fov_h_deg);
-    println!("FOV height (rad): {}", fov_h);
-    println!("Roll (deg): {}", args.roll_deg);
-    println!("Roll (rad): {}", roll);
-    println!("Max magnitude: {}", args.max_magnitude);
-    println!("Lambda (wavelength) nm: {}", args.lambda_nm);
-    println!("Pixel size (meters): {}", args.pixel_size_m);
-    println!("Output image width: {}", args.width);
-    println!("Output image height: {}", args.height);
-    println!("Output image height: {}", args.height);
-    println!("Output filename: {}", args.output);
-    println!("============ End of cmd args list ============");*/
-
-    // 1) Rotate FOV by specified roll
-    let get_fov_start = Instant::now();
-    let center = EquatorialCoords {
-        ra: center_ra,
-        dec: center_dec,
+    let cmd_args = Args::parse();
+    let args = StarCatalogArgs {
+        source: cmd_args.source,
+        center_ra: cmd_args.center_ra,
+        center_dec: cmd_args.center_dec,
+        fov_w: cmd_args.fov_w,
+        fov_h: cmd_args.fov_h,
+        roll: cmd_args.roll,
+        max_magnitude: cmd_args.max_magnitude,
+        lambda_nm: cmd_args.lambda_nm,
+        pixel_size_m: cmd_args.pixel_size_m,
+        width: cmd_args.width,
+        height: cmd_args.height,
+        output: cmd_args.output,
     };
-    let rolled_fov = get_fov(center, fov_w, fov_h, roll);
-    println!("Total FOV retrieval time: {:?}", get_fov_start.elapsed());
 
-    // 2) Read stars and filter against rolled_fov to create subset of stars in view of the image
-    let read_stars_start = Instant::now();
-    let stars_in_fov = read_stars(args.source, rolled_fov, args.max_magnitude)?;
-    println!(
-        "Total time to read and parse stars: {:?}",
-        read_stars_start.elapsed()
-    );
-
-    // 4) Render stars in FOV
-    let render_stars_start = Instant::now();
-    let img = render_stars(
-        stars_in_fov,
-        args.width,
-        args.height,
-        center,
-        fov_w,
-        fov_h,
-        roll,
-    );
-    img.save(&args.output)?;
-    println!(
-        "Total parse and write stars: {:?}",
-        render_stars_start.elapsed()
-    );
-
-    println!("Total run time elapsed: {:?}", run_start.elapsed());
-
-    Ok(())
+    parse_and_render(&args)
 }

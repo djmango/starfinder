@@ -66,10 +66,10 @@ cargo run -- --roll 0.0 --fov-w 75.0 --fov-h 50.0
 
 Ensure you have Python 3.8 or later, then:
 
-`bash`
+```bash
 pip install starfinder
-
 ````
+
 Or if you want to install the package in development mode:
 
 ```bash
