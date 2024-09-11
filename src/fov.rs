@@ -4,6 +4,8 @@ use std::f64::consts::PI;
 
 use crate::types::{CartesianCoords, EquatorialCoords};
 
+// CAREFUL! If this value is ever changed, the optimize binary needs to be rerun!! The data is
+// optimized against this grid resolution.
 pub const GRID_RESOLUTION: f64 = 360.0;
 
 pub fn get_fov(

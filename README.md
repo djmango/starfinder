@@ -31,6 +31,37 @@
 
 ### Using Cargo (Rust)
 
+The first step in using the renderer is to optimize your data. The optimizer can optimize against
+_any_ star catalog as long as it fulfills the following requirements:
+
+1) Contains star data in CSV (any separator is usable)
+2) Star data includes right ascension and declination for each record. Currently, they must be in degrees.
+3) Star data includes vt_mag or bt_mag, preferably both
+
+Specify the column number of each of these four data points when calling the optimizer (bt and vt
+mag are optional, but at least one is required). To optimize for the Tycho 2 catalog, run the
+following command:
+```bash
+cargo run --bin optimize -- --idx-ra 24 --idx-dec 25 --idx-bt-mag 17 --idx-vt-mag 19
+```
+For other catalogs that satisfy the optimizer's requirements, simply replace the index values above
+with the column indexes for those items in your catalog's data file.
+
+### Optimizer command-line arguments
+
+| Flag         | Description                  | Default                   | Notes                        |
+|--------------|------------------------------|---------------------------|------------------------------|
+| --source, -s | Source file path             | `data/tycho2/catalog.dat` |                              |
+| --output, -o | Output filepath              | `data/optimized.dat`      | Recommend default            |
+| --separator  | CSV file character separator | "&#124;"                  | Tycho 2 data uses "&#124;"   |
+| --idx-vt-mag | Index of vt_mag              |                           |                              |
+| --idx-bt-mag | Index of bt_mag              |                           |                              |
+| --idx-ra     | Index of right ascension     |                           |                              |
+| --idx-dec    | Index of declination         |                           |                              |
+
+
+### Running the renderer 
+
 To run the renderer with default settings:
 
 ```bash
@@ -46,7 +77,7 @@ cargo run -- --roll 0.0 --fov-w 75.0 --fov-h 50.0
 ### Command-line Arguments
 
 | Flag            | Description                      | Default                   | Notes             |
-| --------------- | -------------------------------- | ------------------------- | ----------------- |
+|-----------------|----------------------------------|---------------------------|-------------------|
 | --source, -s    | Source file path                 | `data/tycho2/catalog.dat` |                   |
 | --center-ra     | FOV center point right ascension | 180.0                     | In degrees        |
 | --center-dec    | FOV center point declination     | 0.0                       | In degrees        |
