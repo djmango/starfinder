@@ -10,6 +10,7 @@ readme = "README.md"
 exclude = [
     "data/*",
     "images/*",
+    "spaceros/*",
 ]
 
 [dependencies]
