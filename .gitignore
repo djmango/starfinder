@@ -190,7 +190,7 @@ __pycache__/
 .Python
 .venv/
 env/
-bin/
+./bin/
 build/
 develop-eggs/
 dist/
@@ -250,5 +250,5 @@ docs/_build/
 .python-version
 
 debug.txt
-star_map.png
+renders/
 spaceros/log

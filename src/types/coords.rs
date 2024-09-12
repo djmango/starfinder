@@ -1,4 +1,4 @@
-use crate::fov::GRID_RESOLUTION;
+
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 use std::hash::{Hash, Hasher};
@@ -21,14 +21,14 @@ impl CartesianCoords {
         let ra: f64;
 
         if self.y < 0.0 {
-            ra = (2.0 * PI) - self.x.acos();
+            ra = (2.0 * PI) - self.x.clamp(-1.0, 1.0).acos();
         } else {
-            ra = self.x.acos();
+            ra = self.x.clamp(-1.0, 1.0).acos();
         }
 
         EquatorialCoords {
             ra,
-            dec: self.z.asin(),
+            dec: self.z.clamp(-1.0, 1.0).asin(),
         }
     }
 }
@@ -67,10 +67,11 @@ impl EquatorialCoords {
         }
     }
 
-    pub fn to_grid(&self) -> EquatorialCoords {
+    pub fn to_grid(&self, fov_size: f64) -> EquatorialCoords {
+        let clamped_size = fov_size.clamp(0.02, 1.0);
         EquatorialCoords {
-            ra: ((self.ra / 2.0 * PI) * (1.0 - (2.0 * self.dec / PI).abs()) * GRID_RESOLUTION).round(),
-            dec: ((2.0 * self.dec / PI) * GRID_RESOLUTION).round(),
+            ra: (self.ra / (2.0 * PI) * (1.0 - (2.0 * self.dec.abs() / PI)).powf(0.5) / clamped_size).round(),
+            dec: (self.dec / (2.0 * PI) / clamped_size).round(),
         }
     }
 }
@@ -90,4 +91,3 @@ impl Hash for EquatorialCoords {
         (self.dec as i32).hash(state);
     }
 }
-

@@ -7,14 +7,9 @@ use starfinder::types::StarCatalogArgs;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    /// Path to the Tycho-2 catalog file
-    #[arg(
-        short,
-        long,
-        value_name = "FILE",
-        default_value = "data/tycho2/catalog.dat"
-    )]
-    source: String,
+    /// Path to the optimized catalog file. The optimize binary should be run before running this to
+    /// generate the optimized data file.
+    #[arg(short, long, default_value = "data/optimized.dat")]source: String,
 
     /// Right Ascension of camera view center point (degrees)
     #[arg(long, default_value_t = 180.0)]
@@ -54,11 +49,11 @@ pub struct Args {
     width: u32,
 
     /// Output image height in pixels
-    #[arg(long, default_value_t = 600)]
+    #[arg(long, default_value_t = 800)]
     height: u32,
 
     /// Output image file name
-    #[arg(short, long, default_value = "star_map.png")]
+    #[arg(short, long, default_value = "renders/star_map.png")]
     output: String,
 }
 
