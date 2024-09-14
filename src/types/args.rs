@@ -4,8 +4,8 @@ use pyo3::prelude::{pyclass, pymethods};
 #[pyclass]
 #[derive(Parser, Debug, Clone)]
 pub struct StarCatalogArgs {
-    #[pyo3(get, set)]
-    pub source: String,
+    // #[pyo3(get, set)]
+    // pub source: String,
     #[pyo3(get, set)]
     pub center_ra: f64,
     #[pyo3(get, set)]
@@ -16,6 +16,8 @@ pub struct StarCatalogArgs {
     pub fov_h: f64,
     #[pyo3(get, set)]
     pub roll: f64,
+    #[pyo3(get, set)]
+    pub fov_max: f64,
     #[pyo3(get, set)]
     pub max_magnitude: f64,
     #[pyo3(get, set)]
@@ -34,12 +36,13 @@ pub struct StarCatalogArgs {
 impl StarCatalogArgs {
     #[new]
     fn new(
-        source: String,
+        // source: String,
         center_ra: f64,
         center_dec: f64,
         fov_w: f64,
         fov_h: f64,
         roll: f64,
+        fov_max: f64,
         max_magnitude: f64,
         lambda_nm: f64,
         pixel_size_m: f64,
@@ -48,12 +51,13 @@ impl StarCatalogArgs {
         output: String,
     ) -> Self {
         Self {
-            source,
+            // source,
             center_ra,
             center_dec,
             fov_w,
             fov_h,
             roll,
+            fov_max,
             max_magnitude,
             lambda_nm,
             pixel_size_m,

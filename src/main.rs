@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::Parser;
 
 use starfinder::parse_and_render::parse_and_render;
@@ -9,7 +10,8 @@ use starfinder::types::StarCatalogArgs;
 pub struct Args {
     /// Path to the optimized catalog file. The optimize binary should be run before running this to
     /// generate the optimized data file.
-    #[arg(short, long, default_value = "data/optimized.dat")]source: String,
+    // #[arg(short, long, default_value = "data/optimized.dat")]
+    // source: String,
 
     /// Right Ascension of camera view center point (degrees)
     #[arg(long, default_value_t = 180.0)]
@@ -30,6 +32,10 @@ pub struct Args {
     /// Roll of the camera view (degrees)
     #[arg(long, default_value_t = 0.0)]
     roll: f64,
+
+    /// Fov max, does not need to be changed unless you want ultra wide view
+    #[arg(long, default_value_t = 60.0)]
+    fov_max: f64,
 
     /// Maximum visual magnitude (lower is brighter)
     #[arg(long, default_value_t = 12.0)]
@@ -57,15 +63,18 @@ pub struct Args {
     output: String,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
+    tracing_subscriber::fmt().init();
+
     let cmd_args = Args::parse();
     let args = StarCatalogArgs {
-        source: cmd_args.source,
+        // source: cmd_args.source,
         center_ra: cmd_args.center_ra,
         center_dec: cmd_args.center_dec,
         fov_w: cmd_args.fov_w,
         fov_h: cmd_args.fov_h,
         roll: cmd_args.roll,
+        fov_max: cmd_args.fov_max,
         max_magnitude: cmd_args.max_magnitude,
         lambda_nm: cmd_args.lambda_nm,
         pixel_size_m: cmd_args.pixel_size_m,

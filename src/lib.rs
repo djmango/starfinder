@@ -1,11 +1,13 @@
+pub mod constants;
 pub mod fov;
+pub mod optimize;
 pub mod parse_and_render;
 pub mod parsing_utils;
 pub mod rendering;
 pub mod types;
 
-use crate::types::StarCatalogArgs;
 use crate::parse_and_render::parse_and_render;
+use crate::types::StarCatalogArgs;
 
 use pyo3::prelude::*;
 

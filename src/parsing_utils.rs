@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io;
 use thiserror::Error;
+use tracing::{error, info, warn};
 
 use crate::types::{EquatorialCoords, Star};
 
@@ -56,24 +57,26 @@ pub fn read_stars<P: AsRef<std::path::Path>>(
             Err(e) => {
                 skipped_rows += 1;
                 if skipped_rows <= 10 {
-                    println!("Skipping row {} due to error: {:?}", i, e);
-                    println!("Problematic row: {:?}", record);
+                    error!("Skipping row {} due to error: {:?}", i, e);
+                    warn!("Problematic row: {:?}", record);
                 } else if skipped_rows == 11 {
-                    println!("Further skipped rows will not be printed...");
+                    warn!("Further skipped rows will not be printed...");
                 }
             }
         }
     }
 
-    println!("Total stars read and filtered: {}", stars.len());
-    println!("Total rows skipped: {}", skipped_rows);
+    info!("Total stars read and filtered: {}", stars.len());
+    info!("Total rows skipped: {}", skipped_rows);
 
     Ok(stars)
 }
 
 /// Parses the *optimize* star data file and pulls out the star as well as its pre-computed ra/dec
 /// in the localization grid format as a separate EquatorialCoordinate
-pub fn parse_optimized_star_record(record: &csv::StringRecord) -> Result<(Star, EquatorialCoords), CatalogError> {
+pub fn parse_optimized_star_record(
+    record: &csv::StringRecord,
+) -> Result<(Star, EquatorialCoords), CatalogError> {
     Ok((
         Star {
             coords: EquatorialCoords {
@@ -85,7 +88,7 @@ pub fn parse_optimized_star_record(record: &csv::StringRecord) -> Result<(Star, 
         EquatorialCoords {
             ra: parse_field(record, 2, "GridRA")?,
             dec: parse_field(record, 3, "GridDec")?,
-        }
+        },
     ))
 }
 
@@ -94,10 +97,10 @@ pub fn parse_optimized_star_record(record: &csv::StringRecord) -> Result<(Star, 
 /// specified differently if a different star catalog is to be used
 pub fn parse_star_record(
     record: &csv::StringRecord,
-    idx_ra: Option<usize>,
-    idx_dec: Option<usize>,
-    idx_bt_mag: Option<usize>,
-    idx_vt_mag: Option<usize>,
+    idx_ra: Option<u64>,
+    idx_dec: Option<u64>,
+    idx_bt_mag: Option<u64>,
+    idx_vt_mag: Option<u64>,
 ) -> Result<Star, CatalogError> {
     let ra = parse_field(record, idx_ra.unwrap_or(24), "RA")?;
     let dec = parse_field(record, idx_dec.unwrap_or(25), "Dec")?;
@@ -117,28 +120,19 @@ pub fn parse_star_record(
 /// specified differently if a different star catalog is to be used
 pub fn parse_magnitude(
     record: &csv::StringRecord,
-    idx_bt_mag: Option<usize>,
-    idx_vt_mag: Option<usize>,
+    idx_bt_mag: Option<u64>,
+    idx_vt_mag: Option<u64>,
 ) -> Result<f64, CatalogError> {
     let bt_mag = parse_field(record, idx_bt_mag.unwrap_or(17), "BT magnitude").ok();
     let vt_mag = parse_field(record, idx_vt_mag.unwrap_or(19), "VT magnitude").ok();
 
-    // println!("Debug: BT_Mag = {:?}, VT_Mag = {:?}", bt_mag, vt_mag);
-
     match (bt_mag, vt_mag) {
         (Some(bt), Some(vt)) => {
             let v_mag = vt - 0.090 * (bt - vt);
-            // println!("Debug: Calculated V_Mag = {:.3}", v_mag);
             Ok(v_mag)
         }
-        (None, Some(vt)) => {
-            // println!("Debug: Using VT_Mag as V_Mag = {:.3}", vt);
-            Ok(vt)
-        }
-        (Some(bt), None) => {
-            // println!("Debug: Using BT_Mag as V_Mag = {:.3}", bt);
-            Ok(bt)
-        }
+        (None, Some(vt)) => Ok(vt),
+        (Some(bt), None) => Ok(bt),
         (None, None) => Err(CatalogError::MissingMagnitude),
     }
 }
@@ -146,11 +140,11 @@ pub fn parse_magnitude(
 /// Parses a field from the record, returning a helpful error if parsing fails.
 pub fn parse_field(
     record: &csv::StringRecord,
-    index: usize,
+    index: u64,
     field_name: &str,
 ) -> Result<f64, CatalogError> {
     record
-        .get(index)
+        .get(index.try_into().unwrap())
         .ok_or_else(|| CatalogError::MissingField(field_name.to_string()))?
         .trim()
         .parse()
