@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 
-use starfinder::parse_and_render::parse_and_render;
+use starfinder::parse_and_render::render_to_file;
 use starfinder::types::StarCatalogArgs;
 
 /// CLI Arguments
@@ -83,5 +83,5 @@ fn main() -> Result<()> {
         output: cmd_args.output,
     };
 
-    parse_and_render(&args)
+    render_to_file(&args)
 }
