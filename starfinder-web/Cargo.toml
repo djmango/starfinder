@@ -1,6 +1,6 @@
 [package]
 name = "starfinder-web"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
@@ -9,7 +9,7 @@ image = "0.25.2"
 serde = { version = "1.0.210", features = ["derive"] }
 shuttle-actix-web = "0.47.0"
 shuttle-runtime = "0.47.0"
-# starfinder = "1.2.1"
+# starfinder = "1.3.0"
 starfinder = { path = "../" }
 tokio = "1.26.0"
 tracing = "0.1.40"
