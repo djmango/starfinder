@@ -1,12 +1,14 @@
-use actix_web::{get, web, HttpResponse, Result};
+use actix_files::{Files, NamedFile};
+use actix_web::{get, web, HttpResponse, Responder, Result};
 use image::ImageFormat;
 use serde::Deserialize;
 use shuttle_actix_web::ShuttleActixWeb;
 use starfinder::parse_and_render::read_and_render;
+use std::path::PathBuf;
 
 #[get("/")]
-async fn hello_world() -> &'static str {
-    "Hello World!"
+async fn index() -> impl Responder {
+    NamedFile::open(PathBuf::from("static/index.html"))
 }
 
 #[derive(Deserialize)]
@@ -48,7 +50,12 @@ async fn render(params: web::Query<RenderParams>) -> Result<HttpResponse> {
 #[shuttle_runtime::main]
 async fn main() -> ShuttleActixWeb<impl FnOnce(&mut web::ServiceConfig) + Send + Clone + 'static> {
     let config = move |cfg: &mut web::ServiceConfig| {
-        cfg.service(hello_world).service(render);
+        cfg.service(
+            web::scope("")
+                .service(index)
+                .service(Files::new("/static", "static/").index_file("index.html"))
+                .service(render),
+        );
     };
 
     Ok(config.into())

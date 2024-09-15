@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starfinder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .slider-container {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    #starImage {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Starfinder</h1>
+
+  <div class="slider-container">
+    <label for="centerRa">Center RA:</label>
+    <input type="range" id="centerRa" min="0" max="360" step="0.1" value="46.25">
+    <span id="centerRaValue">46.25</span>
+  </div>
+
+  <div class="slider-container">
+    <label for="centerDec">Center Dec:</label>
+    <input type="range" id="centerDec" min="-90" max="90" step="0.1" value="30.0">
+    <span id="centerDecValue">30.0</span>
+  </div>
+
+  <div class="slider-container">
+    <label for="roll">Roll:</label>
+    <input type="range" id="roll" min="-180" max="180" step="1" value="0">
+    <span id="rollValue">0</span>
+  </div>
+
+  <div class="slider-container">
+    <label for="fovW">FOV Width:</label>
+    <input type="range" id="fovW" min="0.1" max="10" step="0.1" value="1">
+    <span id="fovWValue">1</span>
+  </div>
+
+  <div class="slider-container">
+    <label for="fovH">FOV Height:</label>
+    <input type="range" id="fovH" min="0.1" max="10" step="0.1" value="1">
+    <span id="fovHValue">1</span>
+  </div>
+
+  <div class="slider-container">
+    <label for="maxMagnitude">Max Magnitude:</label>
+    <input type="range" id="maxMagnitude" min="0" max="20" step="0.1" value="12">
+    <span id="maxMagnitudeValue">12</span>
+  </div>
+
+  <div class="buttons">
+    <button id="okButton">OK</button>
+    <button id="randomButton">Random</button>
+  </div>
+
+  <img id="starImage" src="" alt="Rendered Star Image">
+
+  <script>
+    const sliders = ['centerRa', 'centerDec', 'roll', 'fovW', 'fovH', 'maxMagnitude'];
+    const fixedParams = {
+      width: 800,
+      height: 800,
+      fov_max: 60
+    };
+
+    function updateSliderValue(sliderId) {
+      const slider = document.getElementById(sliderId);
+      const valueSpan = document.getElementById(`${sliderId}Value`);
+      valueSpan.textContent = slider.value;
+    }
+
+    function getRandomValue(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function setRandomValues() {
+      sliders.forEach(sliderId => {
+        const slider = document.getElementById(sliderId);
+        slider.value = getRandomValue(parseFloat(slider.min), parseFloat(slider.max));
+        updateSliderValue(sliderId);
+      });
+    }
+
+    function updateImage() {
+      const params = new URLSearchParams(fixedParams);
+      sliders.forEach(sliderId => {
+        params.append(sliderId.replace(/([A-Z])/g, "_$1").toLowerCase(), document.getElementById(sliderId).value);
+      });
+
+      const imageUrl = `/render?${params.toString()}`;
+      document.getElementById('starImage').src = imageUrl;
+    }
+
+    sliders.forEach(sliderId => {
+      const slider = document.getElementById(sliderId);
+      slider.addEventListener('input', () => updateSliderValue(sliderId));
+    });
+
+    document.getElementById('okButton').addEventListener('click', updateImage);
+    document.getElementById('randomButton').addEventListener('click', () => {
+      setRandomValues();
+      updateImage();
+    });
+
+    // Initial image load
+    updateImage();
+  </script>
+</body>
+
+</html>
