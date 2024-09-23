@@ -41,7 +41,15 @@ Once you are in the container, cd to the workspace and run the following command
 
 ```bash
 colcon build --packages-select startracker_ros
+```
+In one terminal:
+```
 source install/setup.bash
-ros2 run startracker_ros my_node
+ros2 run video_transport video_publisher
 ```
 
+In another terminal:
+```
+source install/setup.bash
+ros2 run video_transport video_subscriber
+```
