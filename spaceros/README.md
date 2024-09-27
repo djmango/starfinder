@@ -45,11 +45,11 @@ colcon build --packages-select startracker_ros
 In one terminal:
 ```
 source install/setup.bash
-ros2 run video_transport video_publisher
+ros2 run startracker_ros starfinder_publisher
 ```
 
 In another terminal:
 ```
 source install/setup.bash
-ros2 run video_transport video_subscriber
+ ros2 run startracker_ros starfinder_subscriber
 ```
