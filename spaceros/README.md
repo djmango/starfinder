@@ -51,5 +51,5 @@ ros2 run startracker_ros starfinder_publisher
 In another terminal:
 ```
 source install/setup.bash
- ros2 run startracker_ros starfinder_subscriber
+ros2 run startracker_ros starfinder_subscriber
 ```
