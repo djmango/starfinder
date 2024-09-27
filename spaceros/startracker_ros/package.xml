@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>startracker_ros</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="spaceros-user@todo.todo">spaceros-user</maintainer>
+  <name>starfinder_ros</name>
+  <version>0.0.1</version>
+  <description>ROS 2 wrapper for Starfinder</description>
+  <maintainer email="your_email@example.com">Your Name</maintainer>
   <license>TODO: License declaration</license>
 
-  
   <depend>rclpy</depend>
+  <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
-  
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
