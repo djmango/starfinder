@@ -20,8 +20,8 @@ setup(
     entry_points={
         "console_scripts": [
             "my_node = startracker_ros.my_node:main",
-            "video_publisher = startracker_ros.video_publisher:main",
-            "video_subscriber = startracker_ros.video_subscriber:main",
+            "starfinder_publisher = startracker_ros.starfinder_publisher_node:main",
+            "starfinder_subscriber = startracker_ros.starfinder_subscriber_node:main",
         ],
     },
 )
