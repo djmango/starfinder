@@ -15,7 +15,7 @@ class StarfinderNode(Node):
 
     def timer_callback(self):
         # Runs the Rust application and outputs the image
-        result = subprocess.run(["cargo", "run", "--release"], cwd="/home/spaceros-user/starfinder", capture_output=True)
+        result = subprocess.run(["cargo", "run", "--release"], cwd="/home/spaceros-user/starfinder", capture_output=True) # cwd is path to main repo
         image_path = "/home/spaceros-user/starfinder/renders/star_map.png"  # Update the output image/folder path 
         
         # Read the image using OpenCV
