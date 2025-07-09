@@ -19,10 +19,6 @@ pub struct StarCatalogArgs {
     // #[pyo3(get, set)]
     pub max_magnitude: f64,
     // #[pyo3(get, set)]
-    pub lambda_nm: f64,
-    // #[pyo3(get, set)]
-    pub pixel_size_m: f64,
-    // #[pyo3(get, set)]
     pub width: u32,
     // #[pyo3(get, set)]
     pub height: u32,

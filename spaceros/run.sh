@@ -4,21 +4,37 @@
 #   docker
 #   an X server
 
-# Image and container naming
-IMG_NAME=osrf/space-ros
-# Replace `/` with `_` to comply with docker container naming
-# And append `_runtime`
-CONTAINER_NAME="$(tr '/' '_' <<< "$IMG_NAME")"
-
-# Directory to map (change this to your desired host directory)
-HOST_DIR="$HOME/github/starfinder/spaceros"
+# Configuration
+IMG_NAME="osrf/space-ros"
+ROS2_DISTRO="humble"
+HOST_DIR="$HOME/spaceros"
 CONTAINER_DIR="/space-ros-workspace"
 
-# Check if the host directory exists, if not create it
-if [ ! -d "$HOST_DIR" ]; then
-    echo "Creating directory $HOST_DIR"
-    mkdir -p "$HOST_DIR"
-fi
+HOST_DIR="$HOME/github/starfinder/spaceros"
+
+# Replace `/` with `_` to comply with docker container naming
+CONTAINER_NAME="$(tr '/' '_' <<< "$IMG_NAME")_runtime"
+
+# Packages to install via apt-get
+APT_PACKAGES=(
+    "python3-opencv"
+    "ros-$ROS2_DISTRO-cv-bridge"
+    "python3-pip"
+    # Add more apt packages here
+)
+
+# Packages to install via pip
+PIP_PACKAGES=(
+    "numpy"
+    # Add more pip packages here
+)
+
+# Create host directory if it doesn't exist
+mkdir -p "$HOST_DIR"
+
+# Construct installation commands
+APT_INSTALL_CMD="sudo apt-get update && sudo apt-get install -y ${APT_PACKAGES[*]}"
+PIP_INSTALL_CMD="pip3 install ${PIP_PACKAGES[*]}"
 
 # Start the container
 docker run --rm -it --name $CONTAINER_NAME \
@@ -26,6 +42,18 @@ docker run --rm -it --name $CONTAINER_NAME \
     -e DISPLAY -e TERM \
     -e QT_X11_NO_MITSHM=1 \
     -v "$HOST_DIR:$CONTAINER_DIR" \
-    $IMG_NAME
+    $IMG_NAME \
+    /bin/bash -c "
+        set -e
+        echo 'Installing apt packages...'
+        $APT_INSTALL_CMD
+        echo 'Installing pip packages...'
+        $PIP_INSTALL_CMD
+        echo 'Sourcing ROS 2 setup...'
+        source /opt/ros/$ROS2_DISTRO/setup.bash
+        echo 'Setup complete. Starting bash...'
+        exec bash
+    "
 
+echo "Container exited. Host directory $HOST_DIR is mapped to $CONTAINER_DIR in the container."
 # Note: After running this script, your $HOST_DIR will be mapped to $CONTAINER_DIR in the Docker container

@@ -10,7 +10,7 @@ use std::time::Instant;
 use tracing::info;
 
 use crate::constants::file_paths::{TYCHO2_CATALOG, TYCHO2_OPTIMIZED};
-use crate::fov;
+
 use crate::optimize::optimize;
 use crate::parsing_utils::read_stars;
 use crate::rendering::render_stars;
@@ -76,18 +76,33 @@ pub fn read_and_render(
         fov_max,
     )?;
 
-    // 1) Rotate FOV by specified roll
+    // 1) BYPASS BROKEN FOV GRID - Load all stars and filter at render time
     let get_fov_start = Instant::now();
     let center = EquatorialCoords {
-        ra: center_ra,
-        dec: center_dec,
+        ra: center_ra.to_radians(),
+        dec: center_dec.to_radians(),
     };
-    let rolled_fov = fov::get_fov(center, fov_w, fov_h, roll);
+    
+    // Create a dummy large grid that includes everything - bypassing broken FOV system
+    use std::collections::HashSet;
+    let mut bypass_grid: HashSet<EquatorialCoords> = HashSet::new();
+    
+    // Add grid coordinates that will match the optimization system
+    // We'll add a wide range to catch most stars, then filter at render time
+    for grid_ra in -100..100 {
+        for grid_dec in -100..100 {
+            bypass_grid.insert(EquatorialCoords {
+                ra: grid_ra as f64,
+                dec: grid_dec as f64,
+            });
+        }
+    }
+    
     info!("Total FOV retrieval time: {:?}", get_fov_start.elapsed());
 
     // 2) Read stars and filter against rolled_fov to create subset of stars in view of the image
     let read_stars_start = Instant::now();
-    let stars_in_fov = read_stars(&tycho2_path_optimized, rolled_fov, max_magnitude)?;
+    let stars_in_fov = read_stars(&tycho2_path_optimized, bypass_grid, max_magnitude)?;
     info!(
         "Total time to read and parse stars: {:?}",
         read_stars_start.elapsed()
@@ -95,7 +110,7 @@ pub fn read_and_render(
 
     // 3) Render stars in FOV
     let render_stars_start = Instant::now();
-    let img = render_stars(stars_in_fov, width, height, center, fov_w, fov_h, roll);
+    let img = render_stars(stars_in_fov, width, height, center, fov_w.to_radians(), fov_h.to_radians(), roll.to_radians());
 
     info!(
         "Total parse and write stars: {:?}",

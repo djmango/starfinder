@@ -18,18 +18,14 @@ pub struct CartesianCoords {
 
 impl CartesianCoords {
     pub fn to_equatorial(&self) -> EquatorialCoords {
-        let ra: f64;
+        // Correct spherical coordinate conversion from Cartesian
+        let ra = self.y.atan2(self.x); // atan2 handles all quadrants correctly
+        let dec = self.z.asin(); // z = sin(dec) for unit sphere
+        
+        // Ensure RA is in [0, 2π) range
+        let ra = if ra < 0.0 { ra + 2.0 * PI } else { ra };
 
-        if self.y < 0.0 {
-            ra = (2.0 * PI) - self.x.clamp(-1.0, 1.0).acos();
-        } else {
-            ra = self.x.clamp(-1.0, 1.0).acos();
-        }
-
-        EquatorialCoords {
-            ra,
-            dec: self.z.clamp(-1.0, 1.0).asin(),
-        }
+        EquatorialCoords { ra, dec }
     }
 }
 
@@ -51,18 +47,35 @@ impl EquatorialCoords {
         let cra = center.ra;
         let cdec = center.dec;
 
+        // Handle RA wrap-around (crossing 0°/360°)
+        let mut ra_diff = ra - cra;
+        if ra_diff > PI {
+            ra_diff -= 2.0 * PI;
+        } else if ra_diff < -PI {
+            ra_diff += 2.0 * PI;
+        }
+
+        // Gnomonic projection - projecting sphere onto tangent plane
+        let denominator = (cdec.cos() * dec.cos() * ra_diff.cos()) + (dec.sin() * cdec.sin());
+        
+        // Prevent division by zero or very small denominators (stars behind the projection plane)
+        if denominator.abs() < 1e-10 {
+            // Return coordinates far outside any reasonable FOV
+            return StandardCoords { x: 1000.0, y: 1000.0 };
+        }
+        
         StandardCoords {
-            x: (dec.cos() * (ra - cra).sin())
-                / ((cdec.cos() * dec.cos() * (ra - cra).cos()) + (dec.sin() * cdec.sin())),
-            y: ((cdec.sin() * dec.cos() * (ra - cra).cos()) - (cdec.cos() * dec.sin()))
-                / ((cdec.cos() * dec.cos() * (ra - cra).cos()) + (dec.sin() * cdec.sin())),
+            x: (dec.cos() * ra_diff.sin()) / denominator,
+            y: ((cdec.sin() * dec.cos() * ra_diff.cos()) - (cdec.cos() * dec.sin())) / denominator,
         }
     }
 
     pub fn to_cartesian(&self) -> CartesianCoords {
+        // FIXED: Correct spherical to Cartesian conversion
+        // For a point on unit sphere: (ra, dec) -> (x, y, z)
         CartesianCoords {
-            x: self.ra.cos(),
-            y: self.ra.sin(),
+            x: self.dec.cos() * self.ra.cos(),
+            y: self.dec.cos() * self.ra.sin(),
             z: self.dec.sin(),
         }
     }
