@@ -138,3 +138,8 @@ Contributions to `starfinder` are welcome! Please feel free to submit a Pull Req
 ## License
 
 This project is licensed under the GPLv3 License - see the LICENSE file for details.
+
+# docker
+docker build -f starfinder-web/Dockerfile -t ghcr.io/djmango/starfinder-web:latest .
+docker push ghcr.io/djmango/starfinder-web:latest
+docker run -p 8080:8080 ghcr.io/djmango/starfinder-web:latest

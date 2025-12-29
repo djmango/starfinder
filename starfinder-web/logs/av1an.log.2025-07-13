@@ -1,0 +1,2 @@
+2025-07-13T19:52:22.071983Z  INFO main ThreadId(01) av1an_core::logging: /Users/djmango/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/av1an-core-0.4.4/src/logging.rs:150: Logging system initialized
+2025-07-13T19:52:22.072025Z DEBUG main ThreadId(01) av1an_core::logging: /Users/djmango/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/av1an-core-0.4.4/src/logging.rs:151: Module-specific logging enabled

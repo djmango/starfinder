@@ -1,14 +1,14 @@
-use actix_files::{Files, NamedFile};
-use actix_web::{get, web, HttpResponse, Responder, Result};
+use actix_files::NamedFile;
+use actix_web::{get, web, App, HttpResponse, HttpServer, Result};
 use image::ImageFormat;
 use serde::Deserialize;
-use shuttle_actix_web::ShuttleActixWeb;
 use starfinder::parse_and_render::read_and_render;
 use std::path::PathBuf;
+use tracing::info;
 
 #[get("/")]
-async fn index() -> impl Responder {
-    NamedFile::open(PathBuf::from("static/index.html"))
+async fn index() -> Result<NamedFile> {
+    Ok(NamedFile::open(PathBuf::from("static/index.html"))?)
 }
 
 #[derive(Deserialize)]
@@ -26,17 +26,21 @@ struct RenderParams {
 
 #[get("/render")]
 async fn render(params: web::Query<RenderParams>) -> Result<HttpResponse> {
-    let image = read_and_render(
-        params.center_ra,
-        params.center_dec,
-        params.roll,
-        params.fov_w,
-        params.fov_h,
-        params.max_magnitude,
-        params.width,
-        params.height,
-        params.fov_max,
-    )
+    let image = web::block(move || {
+        read_and_render(
+            params.center_ra,
+            params.center_dec,
+            params.roll,
+            params.fov_w,
+            params.fov_h,
+            params.max_magnitude,
+            params.width,
+            params.height,
+            params.fov_max,
+        )
+    })
+    .await
+    .map_err(|e| actix_web::error::ErrorInternalServerError(e))?
     .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
 
     let mut buffer = Vec::new();
@@ -47,16 +51,20 @@ async fn render(params: web::Query<RenderParams>) -> Result<HttpResponse> {
     Ok(HttpResponse::Ok().content_type("image/png").body(buffer))
 }
 
-#[shuttle_runtime::main]
-async fn main() -> ShuttleActixWeb<impl FnOnce(&mut web::ServiceConfig) + Send + Clone + 'static> {
-    let config = move |cfg: &mut web::ServiceConfig| {
-        cfg.service(
-            web::scope("")
-                .service(index)
-                .service(Files::new("/static", "static/").index_file("index.html"))
-                .service(render),
-        );
-    };
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    tracing_subscriber::fmt::init();
 
-    Ok(config.into())
+    let bind_addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
+    info!("Starting server at http://{}", bind_addr);
+
+    HttpServer::new(|| {
+        App::new()
+            .service(index)
+            .service(render)
+            .service(actix_files::Files::new("/static", "static/").index_file("index.html"))
+    })
+    .bind(&bind_addr)?
+    .run()
+    .await
 }

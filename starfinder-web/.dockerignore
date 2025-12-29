@@ -1,0 +1,13 @@
+target/
+starfinder-web/target/
+data/
+spaceros/
+renders/
+*.png
+.git/
+.gitignore
+*.md
+poetry.lock
+pyproject.toml
+example.py
+
