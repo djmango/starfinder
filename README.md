@@ -141,5 +141,9 @@ This project is licensed under the GPLv3 License - see the LICENSE file for deta
 
 # docker
 docker build -f starfinder-web/Dockerfile -t ghcr.io/djmango/starfinder-web:latest .
-docker push ghcr.io/djmango/starfinder-web:latest
 docker run -p 8080:8080 ghcr.io/djmango/starfinder-web:latest
+
+docker buildx create --name multiarch --use
+docker buildx build --platform linux/amd64 -t ghcr.io/djmango/starfinder-web:latest --push -f starfinder-web/Dockerfile .
+
+docker push ghcr.io/djmango/starfinder-web:latest

@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::io::Write;
+use std::io::{self, Write};
 use std::path::PathBuf;
 
 fn main() {
@@ -31,20 +31,20 @@ fn main() {
     // Create directory
     fs::create_dir_all(&tycho2_dir).expect("Failed to create tycho2 directory");
 
-    // Download the catalog
+    // Download the catalog with streaming to avoid timeout
     let url = "https://archive.eso.org/ASTROM/TYC-2/data/catalog.dat";
-    let response = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(300))
+    let mut response = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(1800)) // 30 minutes total timeout
+        .connect_timeout(std::time::Duration::from_secs(60))
         .build()
         .expect("Failed to build HTTP client")
         .get(url)
         .send()
         .expect("Failed to download Tycho-2 catalog");
 
-    let bytes = response.bytes().expect("Failed to read response bytes");
-
+    // Stream the response to file instead of loading into memory
     let mut file = fs::File::create(&tycho2_path).expect("Failed to create catalog file");
-    file.write_all(&bytes)
+    std::io::copy(&mut response, &mut file)
         .expect("Failed to write catalog file");
 
     println!(
