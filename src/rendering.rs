@@ -15,12 +15,6 @@ pub fn render_stars(
 ) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let mut img = ImageBuffer::new(width, height);
 
-    // Find the minimum and maximum magnitudes in the dataset
-    let min_mag = stars.iter().map(|s| s.mag).fold(f64::INFINITY, f64::min);
-    let max_mag = stars
-        .iter()
-        .map(|s| s.mag)
-        .fold(f64::NEG_INFINITY, f64::max);
     let z_roll_mat = SMatrix::<f64, 2, 2>::new(
         fov_roll.cos(),
         -fov_roll.sin(),
@@ -36,22 +30,23 @@ pub fn render_stars(
     let max_fov_radius = (fov_w.powi(2) + fov_h.powi(2)).sqrt() / 2.0;
     
     println!("Attempting to render {} stars", stars.len());
-    println!("Magnitude range: {} to {}", min_mag, max_mag);
     let mut stars_rendered = 0;
     let mut stars_out_of_bounds = 0;
     let mut stars_too_far = 0;
 
-    for star in stars {
-        // Calculate angular distance from center using spherical distance formula
+    // First pass: filter stars by angular distance and collect visible ones
+    let mut visible_stars: Vec<(f64, f64, &Star)> = Vec::new();
+
+    for star in &stars {
+        // Calculate angular distance from center using great circle distance
         let ra_diff = star.coords.ra - fov_center.ra;
         let dec_star = star.coords.dec;
         let dec_center = fov_center.dec;
-        
-        // Great circle distance formula
-        let angular_distance = (dec_star.sin() * dec_center.sin() + 
-                               dec_star.cos() * dec_center.cos() * ra_diff.cos()).acos();
-        
-        // Skip stars outside the field of view (fixed broken FOV grid filtering)
+
+        let cos_dist = dec_star.sin() * dec_center.sin() +
+                       dec_star.cos() * dec_center.cos() * ra_diff.cos();
+        let angular_distance = cos_dist.clamp(-1.0, 1.0).acos();
+
         if angular_distance > max_fov_radius {
             stars_too_far += 1;
             continue;
@@ -69,27 +64,37 @@ pub fn render_stars(
             continue;
         }
 
-        // Inverse the magnitude scale (brighter stars have lower magnitudes)
-        let normalized_mag = if max_mag > min_mag {
-            (max_mag - star.mag) / (max_mag - min_mag)
+        visible_stars.push((x, y, star));
+    }
+
+    // Compute magnitude range from VISIBLE stars only for proper normalization
+    let vis_min_mag = visible_stars.iter().map(|(_, _, s)| s.mag).fold(f64::INFINITY, f64::min);
+    let vis_max_mag = visible_stars.iter().map(|(_, _, s)| s.mag).fold(f64::NEG_INFINITY, f64::max);
+    println!("Visible stars: {}, magnitude range: {:.2} to {:.2}", visible_stars.len(), vis_min_mag, vis_max_mag);
+
+    for (x, y, star) in &visible_stars {
+        // Normalize magnitude using only visible stars' range
+        let normalized_mag = if vis_max_mag > vis_min_mag {
+            (vis_max_mag - star.mag) / (vis_max_mag - vis_min_mag)
         } else {
-            1.0 // If all stars have same magnitude
+            1.0
         };
-        
-        // Scale star intensity and size based on magnitude
-        let star_intensity = normalized_mag.powf(0.8); // Gentler curve
-        
-        // Much smaller, realistic star sizes (1-3 pixels radius)
-        let star_radius = if star.mag < 2.0 { 
-            2.5 // Bright stars get slightly larger 
-        } else if star.mag < 5.0 { 
-            1.8 
-        } else { 
-            1.2 // Faint stars stay small
+
+        // Use a gentler curve so faint stars are still clearly visible
+        let star_intensity = 0.3 + 0.7 * normalized_mag.powf(0.6);
+
+        // Star sizes based on magnitude
+        let star_radius = if star.mag < 2.0 {
+            3.0
+        } else if star.mag < 5.0 {
+            2.2
+        } else if star.mag < 8.0 {
+            1.6
+        } else {
+            1.2
         };
-        
-        // Render the star with a simple PSF
-        render_star_simple(&mut img, x, y, star_intensity, star_radius);
+
+        render_star_simple(&mut img, *x, *y, star_intensity, star_radius);
         stars_rendered += 1;
     }
 
@@ -105,18 +110,18 @@ fn render_star_simple(
     intensity: f64,
     radius: f64,
 ) {
-    let render_radius = (radius + 1.0) as i32; // Small render area
-    
+    let render_radius = (radius + 1.0) as i32;
+
     for dy in -render_radius..=render_radius {
         for dx in -render_radius..=render_radius {
             let pixel_x = (center_x + dx as f64) as i32;
             let pixel_y = (center_y + dy as f64) as i32;
-            
-            if pixel_x >= 0 && pixel_x < img.width() as i32 && 
+
+            if pixel_x >= 0 && pixel_x < img.width() as i32 &&
                pixel_y >= 0 && pixel_y < img.height() as i32 {
-                
+
                 let r = ((dx as f64).powi(2) + (dy as f64).powi(2)).sqrt();
-                
+
                 // Simple Gaussian-like falloff
                 let gaussian_falloff = if r <= radius {
                     let normalized_r = r / radius;

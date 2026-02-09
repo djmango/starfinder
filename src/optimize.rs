@@ -64,10 +64,10 @@ pub fn optimize(
     let mut out_buffer = BufWriter::new(out_file);
     let fov_scale = fov_max.to_radians() / (4.0 * PI);
 
+    let mut skipped_rows = 0;
+
     for (i, result) in csv_reader.records().enumerate() {
         let record = result?;
-
-        let mut skipped_rows = 0;
 
         match parse_star_record(&record, Some(idx_ra), Some(idx_dec), idx_bt_mag, idx_vt_mag) {
             Ok(star) => {

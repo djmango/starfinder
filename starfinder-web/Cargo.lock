@@ -2607,12 +2607,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "spec_math"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02ef091d4e8b981dbaa4cc17789d00b53d5d2c001ae689f14e6093f30c529036"
-
-[[package]]
 name = "stable_deref_trait"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2630,7 +2624,6 @@ dependencies = [
  "nalgebra",
  "reqwest",
  "serde",
- "spec_math",
  "thiserror 2.0.12",
  "tracing",
  "tracing-subscriber",
